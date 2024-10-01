@@ -112,7 +112,7 @@ int entry_destroy(struct entry_t *e){
     if(e->key!=NULL)
         free(e->key);
     if(e->value!=NULL)
-        free(e->value);
+        block_destroy(e->value);
 
     free(e);
     return 0;

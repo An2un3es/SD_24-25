@@ -39,44 +39,71 @@ struct list_t *list_create(){
  */
 int list_add(struct list_t *l, struct entry_t *entry){
 
-    
 }
 
 /* Função que conta o número de entries na lista passada como argumento.
  * Retorna o tamanho da lista ou -1 em caso de erro.
  */
-int list_size(struct list_t *l);
+int list_size(struct list_t *l){
+    if(l==NULL)
+        return -1;
+        
+    return l->size;
+}
 
 /* Função que obtém da lista a entry com a chave key.
  * Retorna a referência da entry na lista ou NULL se não encontrar a
  * entry ou em caso de erro.
 */
-struct entry_t *list_get(struct list_t *l, char *key);
+struct entry_t *list_get(struct list_t *l, char *key){
+
+}
 
 /* Função auxiliar que constrói um array de char* com a cópia de todas as keys na 
  * lista, colocando o último elemento do array com o valor NULL e
  * reservando toda a memória necessária.
  * Retorna o array de strings ou NULL em caso de erro.
  */
-char **list_get_keys(struct list_t *l);
+char **list_get_keys(struct list_t *l){
+
+}
 
 /* Função auxiliar que liberta a memória ocupada pelo array de keys obtido pela 
  * função list_get_keys.
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
-int list_free_keys(char **keys);
+int list_free_keys(char **keys){
+
+}
 
 /* Função que elimina da lista a entry com a chave key, libertando a
  * memória ocupada pela entry.
  * Retorna 0 se encontrou e removeu a entry, 1 se não encontrou a entry,
  * ou -1 em caso de erro.
  */
-int list_remove(struct list_t *l, char *key);
+int list_remove(struct list_t *l, char *key){
+
+}
 
 /* Função que elimina uma lista, libertando *toda* a memória utilizada
  * pela lista (incluindo todas as suas entradas).
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
-int list_destroy(struct list_t *l);
+int list_destroy(struct list_t *l){
+
+    if(l==NULL)
+        return -1;
+    
+    struct node_t *current_node = l->head;
+
+    while(current_node!=NULL){
+        
+        entry_destroy(current_node->entry);
+        current_node=current_node->prox;
+    }
+
+    free(l);
+    return 0;
+}
 
 

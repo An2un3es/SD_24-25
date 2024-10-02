@@ -39,6 +39,43 @@ struct list_t *list_create(){
  */
 int list_add(struct list_t *l, struct entry_t *entry){
 
+    if(l==NULL || entry==NULL)
+        return -1;
+
+
+    //adicionar a entry o inicio
+    if(l->head==NULL || entry_compare(l->head->entry,entry)>0){
+        struct node_t *new_node= (struct node_t *) malloc(sizeof(struct node_t));
+        new_node->entry=entry;
+
+        new_node->prox=l->head;
+        l->head=new_node;
+        l->size=l->size+1;
+
+        return 0;
+    }else{
+        struct node_t *current_node = l->head;
+        int valor= entry_compare(current_node->prox->entry,entry);
+		while (current_node->prox!=NULL && valor<0){
+        
+            current_node=current_node->prox;
+        }
+
+        if(valor==0){
+            entry_replace(current_node->prox->entry,entry->key,entry->value);
+            return 1;
+        }
+
+        struct node_t *new_node= (struct node_t *) malloc(sizeof(struct node_t));
+        new_node->entry=entry;
+
+        new_node->prox=current_node->prox;
+		current_node->prox=new_node;
+    }
+     l->size++;
+
+     return 0;        
+
 }
 
 /* Função que conta o número de entries na lista passada como argumento.

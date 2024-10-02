@@ -122,19 +122,37 @@ char **list_get_keys(struct list_t *l){
     if(l==NULL)
         return NULL;
 
-    char *keys_array[(l->size)+1];
-    int count=1;
-
-    struct node_t *current_node = l->head;
-    for(int i=0; i<(l->size)-1;i++){
-
-        keys_array[i]=strdup(current_node->entry->key);
-        current_node=current_node->prox;
-        count++;
+    char **keys_array = (char **)malloc((l->size + 1) * sizeof(char *));
+    if (keys_array == NULL) {
+        return NULL;
     }
 
-    keys_array[count]=NULL;
+
+    struct node_t *current_node = l->head;
+
+    int i;
+    for (i = 0; i < l->size; i++) {
+
+        if (current_node == NULL || current_node->entry == NULL) {
+            for (int j = 0; j < i; j++) {
+                free(keys_array[j]);
+            }
+            free(keys_array);
+            return NULL;
+        }
+        
+        keys_array[i] = strdup(current_node->entry->key);
+        if (keys_array[i] == NULL) {
+            for (int j = 0; j < i; j++) {
+                free(keys_array[j]);
+            }
+            free(keys_array);
+            return NULL;
+        }
+        current_node = current_node->prox;
+    }
     
+    keys_array[i] = NULL;
     return keys_array;
 
 

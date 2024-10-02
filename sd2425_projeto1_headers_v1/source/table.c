@@ -1,5 +1,4 @@
-#ifndef _TABLE_H
-#define _TABLE_H /* Módulo TABLE */
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -86,25 +85,34 @@ int table_size(struct table_t *t){
  * reservando toda a memória necessária.
  * Retorna o array de strings ou NULL em caso de erro.
  */
-char **table_get_keys(struct table_t *t);
+char **table_get_keys(struct table_t *t){
+
+    
+}
 
 /* Função auxiliar que liberta a memória ocupada pelo array de keys obtido pela 
  * função table_get_keys.
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
-int table_free_keys(char **keys);
+int table_free_keys(char **keys){
+
+}
 
 /* Função que remove da lista a entry com a chave key, libertando a
  * memória ocupada pela entry.
  * Retorna 0 se encontrou e removeu a entry, 1 se não encontrou a entry,
  * ou -1 em caso de erro.
  */
-int table_remove(struct table_t *t, char *key);
+int table_remove(struct table_t *t, char *key){
+
+}
 
 /* Função que elimina uma tabela, libertando *toda* a memória utilizada
  * pela tabela.
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
-int table_destroy(struct table_t *t);
+int table_destroy(struct table_t *t){
 
-#endif 
+
+}
+ 

@@ -43,6 +43,21 @@ struct entry_t *entry_create(char *key, struct block_t *value){
  * 1 se e1 > e2 ou -2 em caso de erro.
  */
 int entry_compare(struct entry_t *e1, struct entry_t *e2){
+
+    if(e1==NULL || e2==NULL)
+        return -2;
+    
+    int output = strcmp (e1->key,e2->key);
+
+    if(output==0){
+        return 0;
+    }else if(output>0){
+        return 1;
+    }else if(output<0){
+        return -1;
+    }
+
+    return -2;
     
 }
 

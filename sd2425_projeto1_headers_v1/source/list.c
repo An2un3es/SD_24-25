@@ -53,11 +53,12 @@ int list_add(struct list_t *l, struct entry_t *entry){
         l->size=l->size+1;
 
         return 0;
-    }else{
+
+    }else{//adicionar a entry no meio/fim
         struct node_t *current_node = l->head;
         int valor= entry_compare(current_node->prox->entry,entry);
 		while (current_node->prox!=NULL && valor<0){
-        
+
             current_node=current_node->prox;
         }
 
@@ -93,6 +94,21 @@ int list_size(struct list_t *l){
  * entry ou em caso de erro.
 */
 struct entry_t *list_get(struct list_t *l, char *key){
+
+    if(l==NULL || l->size==0 || key==NULL)
+        return NULL;
+    
+    struct node_t *current_node = l->head;
+
+    while(current_node!=NULL){
+
+        if(strcmp(current_node->entry->key,key)==0){
+            return current_node->entry;
+        }
+        current_node=current_node->prox;
+    }
+
+    return NULL;
 
 }
 

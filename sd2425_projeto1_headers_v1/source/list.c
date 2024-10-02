@@ -119,6 +119,25 @@ struct entry_t *list_get(struct list_t *l, char *key){
  */
 char **list_get_keys(struct list_t *l){
 
+    if(l==NULL)
+        return NULL;
+
+    char *keys_array[(l->size)+1];
+    int count=1;
+
+    struct node_t *current_node = l->head;
+    for(int i=0; i<(l->size)-1;i++){
+
+        keys_array[i]=strdup(current_node->entry->key);
+        current_node=current_node->prox;
+        count++;
+    }
+
+    keys_array[count]=NULL;
+    
+    return keys_array;
+
+
 }
 
 /* Função auxiliar que liberta a memória ocupada pelo array de keys obtido pela 

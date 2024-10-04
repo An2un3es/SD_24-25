@@ -183,6 +183,15 @@ int table_free_keys(char **keys){
  */
 int table_remove(struct table_t *t, char *key){
 
+    if(t==NULL || key ==NULL)
+        return -1;
+
+    int value =hash(key,t);
+
+    struct list_t *lista= t->listas[value];
+    
+    return list_remove(lista,key);
+
 }
 
 /* Função que elimina uma tabela, libertando *toda* a memória utilizada

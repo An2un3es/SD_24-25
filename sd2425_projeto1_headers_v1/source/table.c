@@ -105,16 +105,7 @@ int table_size(struct table_t *t){
         if(list==NULL)
             return -1;
         
-        struct node_t *current_node =list->head;
-
-        while(current_node!=NULL){
-            if(current_node->entry!=NULL && current_node->entry->value!=NULL){
-                count++;
-                current_node=current_node->prox;
-            }else{
-                return -1;
-            }
-        }
+        count=count+list->size;
         i++;
     }
 

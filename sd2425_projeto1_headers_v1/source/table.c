@@ -5,7 +5,8 @@
 #include <string.h>
 #include "table.h"
 #include "table-private.h"
-
+#include "list.h"
+#include "list-private.h"
 
 
 
@@ -92,6 +93,32 @@ struct block_t *table_get(struct table_t *t, char *key){
  * Retorna o tamanho da tabela ou -1 em caso de erro.
  */
 int table_size(struct table_t *t){
+
+    if(t==NULL)
+        return -1;
+    
+    int i;
+    int count;
+
+    while(i<t->n_linhas){
+        struct list_t * list = t->listas[i];
+        if(list==NULL)
+            return -1;
+        
+        struct node_t *current_node =list->head;
+
+        while(current_node!=NULL){
+            if(current_node->entry!=NULL && current_node->entry->value!=NULL){
+                count++;
+                current_node=current_node->prox;
+            }else{
+                return -1;
+            }
+        }
+        i++;
+    }
+
+    return count;
 
 }
 

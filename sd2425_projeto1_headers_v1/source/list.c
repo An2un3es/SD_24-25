@@ -179,15 +179,23 @@ int list_remove(struct list_t *l, char *key){
     if (key == NULL){
         return -1;
     }
+
     struct node_t *current_node = l->head;
-    int valor= entry_compare(current_node->prox->entry,key);
-    if(valor == 0){
-        entry_destroy(current_node->prox->entry);
-        return 0;
+    struct node_t *next;
+
+    while(current_node!=NULL){
+
+        if(strcmp(current_node->prox->entry->key,key)==0){
+
+            next=current_node->prox->prox;
+            entry_destroy(current_node->prox->entry);
+            current_node->prox=next;
+            return 0;
+        }
+        current_node=current_node->prox;
+
     }
-     if(valor == -2){
-        return 1;
-    }
+    return 1;
 }
 
 /* Função que elimina uma lista, libertando *toda* a memória utilizada

@@ -119,6 +119,40 @@ int table_size(struct table_t *t){
  * Retorna o array de strings ou NULL em caso de erro.
  */
 char **table_get_keys(struct table_t *t){
+    if (t == NULL) {
+        return NULL;
+    }
+
+
+    int total_keys = table_size(t);
+    if (total_keys == -1) {
+        return NULL;
+    }
+
+    char **keys_array_table = (char **)malloc((total_keys + 1) * sizeof(char *));
+    if (keys_array_table == NULL) {
+        return NULL; 
+    }
+
+    int j = 0; 
+
+
+    for (int i = 0; i < t->n_linhas; i++) {
+        struct list_t *list = t->listas[i];
+
+        char **keys_array_lista = list_get_keys(list);
+        if (keys_array_lista != NULL) {
+            
+            for (int k = 0; keys_array_lista[k] != NULL; k++) {
+                keys_array_table[j++] = keys_array_lista[k];
+            }
+            free(keys_array_lista); 
+        }
+    }
+
+    keys_array_table[j] = NULL;
+
+    return keys_array_table;
 
     
 }

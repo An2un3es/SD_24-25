@@ -199,6 +199,17 @@ int table_remove(struct table_t *t, char *key){
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
 int table_destroy(struct table_t *t){
+    if(t==NULL)
+        return -1;
+    
+    for(int i =0; i<t->n_linhas;i++){
+
+        list_destroy(t->listas[i]);
+    }
+
+    free(t);
+
+    return 0;
 
 
 }

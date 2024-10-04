@@ -50,7 +50,7 @@ struct table_t *table_create(int n){
  * Retorna 0 (ok) ou -1 em caso de erro.
  */
 int table_put(struct table_t *t, char *key, struct block_t *value){
-    if (value==NULL || key ==NULL)
+    if (t==NULL || value==NULL || key ==NULL)
         return -1;
     
     int index = hash(key,t);
@@ -74,6 +74,18 @@ int table_put(struct table_t *t, char *key, struct block_t *value){
  * NULL se não encontrar a entry ou em caso de erro.
  */
 struct block_t *table_get(struct table_t *t, char *key){
+
+    if (t==NULL || key ==NULL)
+        return NULL;
+    
+    int index = hash(key,t);
+    struct list_t *list= t->listas[index];
+
+    struct entry_t *entry =list_get(list,key);
+    if(entry==NULL)
+        return NULL;
+    
+    return entry->value;
 
 }
 /* Função que conta o número de entries na tabela passada como argumento.

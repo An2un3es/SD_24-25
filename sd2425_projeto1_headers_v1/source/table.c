@@ -54,16 +54,19 @@ int table_put(struct table_t *t, char *key, struct block_t *value){
         return -1;
     
     int index = hash(key,t);
+    struct list_t *list= t->listas[index];
 
-    if(t->listas[index]!=NULL){
+    if(list==NULL)
+        return -1;
 
-    }else{
-        struct node_t=;
-        t->listas[index]= ;
+    struct entry_t *entry =entry_create(key,value);
+    if(entry==NULL){
+        entry_destroy(entry);
+        return -1;
     }
+    list_add(list,entry);
 
-
-
+    return 0;
 }
 
 /* Função que procura na tabela uma entry com a chave key. 

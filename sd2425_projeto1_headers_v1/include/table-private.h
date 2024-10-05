@@ -6,7 +6,7 @@
 /* Esta estrutura define o par {chave, valor} para a tabela
  */
 struct table_t {
-	struct list_t ** listas [];
+	struct list_t ** listas;
 	int n_linhas;
 };
 

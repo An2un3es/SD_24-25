@@ -33,7 +33,7 @@ struct table_t *table_create(int n){
     
     struct table_t *t = (struct table_t *) malloc(sizeof(struct table_t));
 
-    t->listas==l;
+    t->listas=l;
     t->n_linhas=n;
 
     for (int i=0; i<n;i++){

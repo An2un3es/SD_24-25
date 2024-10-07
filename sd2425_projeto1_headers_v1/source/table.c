@@ -28,7 +28,7 @@ unsigned int hash (char *key, struct table_t *t){
 struct table_t *table_create(int n){
 
     struct list_t *l [n];
-    if (n==NULL || n==0)
+    if (n==0)
         return NULL;
     
     struct table_t *t = (struct table_t *) malloc(sizeof(struct table_t));

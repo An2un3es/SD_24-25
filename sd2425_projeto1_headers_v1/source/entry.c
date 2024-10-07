@@ -32,7 +32,6 @@ struct entry_t *entry_create(char *key, struct block_t *value){
         return NULL;
     }
 
-
     return entry;
 
 }

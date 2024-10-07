@@ -5,34 +5,34 @@ SRC_DIR = source
 OBJ_DIR = object
 BIN_DIR = binary
 
-# Listando os arquivos fonte e de teste
-SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
-OBJ_FILES = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC_FILES))
+# Garantir que as pastas de destino existam
+$(shell mkdir -p $(OBJ_DIR) $(BIN_DIR))
 
-# Nome do executável
-TARGET = $(BIN_DIR)/programa
+# Teste de block
+$(BIN_DIR)/test_block: $(SRC_DIR)/test_block.c $(SRC_DIR)/block.c
+	$(CC) $(CFLAGS) $(SRC_DIR)/test_block.c $(SRC_DIR)/block.c -o $(BIN_DIR)/test_block
 
-# Regra principal
-all: $(TARGET)
+# Teste de entry
+$(BIN_DIR)/test_entry: $(SRC_DIR)/test_entry.c $(SRC_DIR)/entry.c $(SRC_DIR)/block.c
+	$(CC) $(CFLAGS) $(SRC_DIR)/test_entry.c $(SRC_DIR)/entry.c $(SRC_DIR)/block.c -o $(BIN_DIR)/test_entry
 
-# Regra para criar o executável principal
-$(TARGET): $(OBJ_FILES)
-	$(CC) -o $@ $^
+# Teste de list
+$(BIN_DIR)/test_list: $(SRC_DIR)/test_list.c $(SRC_DIR)/list.c $(SRC_DIR)/entry.c $(SRC_DIR)/block.c
+	$(CC) $(CFLAGS) $(SRC_DIR)/test_list.c $(SRC_DIR)/list.c $(SRC_DIR)/entry.c $(SRC_DIR)/block.c -o $(BIN_DIR)/test_list
 
-# Regra para compilar os arquivos .c em .o
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+# Teste de table
+$(BIN_DIR)/test_table: $(SRC_DIR)/test_table.c $(SRC_DIR)/table.c $(SRC_DIR)/list.c $(SRC_DIR)/entry.c $(SRC_DIR)/block.c
+	$(CC) $(CFLAGS) $(SRC_DIR)/test_table.c $(SRC_DIR)/table.c $(SRC_DIR)/list.c $(SRC_DIR)/entry.c $(SRC_DIR)/block.c -o $(BIN_DIR)/test_table
 
-# Regra para compilar todos os testes
-tests: $(OBJ_FILES) $(OBJ_DIR)/test_block.o $(OBJ_DIR)/test_entry.o $(OBJ_DIR)/test_list.o $(OBJ_DIR)/test_table.o $(OBJ_DIR)/test_serialization.o
-	$(CC) -o $(BIN_DIR)/test_programa $(OBJ_DIR)/test_block.o $(OBJ_DIR)/test_entry.o $(OBJ_DIR)/test_list.o $(OBJ_DIR)/test_table.o $(OBJ_DIR)/test_serialization.o $(OBJ_FILES)
+# Teste de serialization
+$(BIN_DIR)/test_serialization: $(SRC_DIR)/test_serialization.c $(SRC_DIR)/serialization.c $(SRC_DIR)/table.c $(SRC_DIR)/list.c $(SRC_DIR)/entry.c $(SRC_DIR)/block.c
+	$(CC) $(CFLAGS) $(SRC_DIR)/test_serialization.c $(SRC_DIR)/serialization.c $(SRC_DIR)/table.c $(SRC_DIR)/list.c $(SRC_DIR)/entry.c $(SRC_DIR)/block.c -o $(BIN_DIR)/test_serialization
 
-# Regra para compilar os arquivos de teste
-$(OBJ_DIR)/test_%.o: $(SRC_DIR)/test_%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+# Regra para compilar todos os testes de uma vez
+tests: $(BIN_DIR)/test_block $(BIN_DIR)/test_entry $(BIN_DIR)/test_list $(BIN_DIR)/test_table $(BIN_DIR)/test_serialization
 
 # Limpeza dos arquivos gerados
 clean:
-	rm -f $(OBJ_DIR)/*.o $(TARGET) $(BIN_DIR)/test_programa
+	rm -f $(BIN_DIR)/test_block $(BIN_DIR)/test_entry $(BIN_DIR)/test_list $(BIN_DIR)/test_table $(BIN_DIR)/test_serialization
 
-.PHONY: all clean tests
+.PHONY: tests clean

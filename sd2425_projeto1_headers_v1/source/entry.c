@@ -13,7 +13,7 @@
  */
 struct entry_t *entry_create(char *key, struct block_t *value){
 
-    if (key == NULL || value == NULL) {
+    if (key == NULL || value == NULL || value->data == NULL || value ->datasize <= 0) {
         return NULL;  
     }
 
@@ -31,11 +31,9 @@ struct entry_t *entry_create(char *key, struct block_t *value){
         free(entry);
         return NULL;
     }
-
     return entry;
 
 }
-
 /* Função que compara duas entries e retorna a ordem das mesmas, sendo esta
  * ordem definida pela ordem das suas chaves.
  * Retorna 0 se as chaves forem iguais, -1 se e1 < e2,
@@ -43,7 +41,7 @@ struct entry_t *entry_create(char *key, struct block_t *value){
  */
 int entry_compare(struct entry_t *e1, struct entry_t *e2){
 
-    if(e1==NULL || e2==NULL)
+    if(e1==NULL || e1->key == NULL || e2->value == NULL || e2==NULL || e2->key == NULL || e2 ->value == NULL)
         return -2;
     
     int output = strcmp (e1->key,e2->key);
@@ -97,16 +95,13 @@ struct entry_t *entry_duplicate(struct entry_t *e){
  */
 int entry_replace(struct entry_t *e, char *new_key, struct block_t *new_value){
 
-    if(e==NULL || new_key==NULL || new_value==NULL){
+    if(e==NULL || e->key == NULL || e->value == NULL || new_key==NULL || new_value==NULL){
         return -1;
     }
 
-    if(e->key!=NULL)
+   
         free(e->key);
-
     e->key=strdup(new_key);
-
-    if(e->value!=NULL)
         free(e->value);
     
     e->value=block_duplicate(new_value);
@@ -120,14 +115,12 @@ int entry_replace(struct entry_t *e, char *new_key, struct block_t *new_value){
  */
 int entry_destroy(struct entry_t *e){
     
-    if(e==NULL)
+    if(e==NULL || e->key == NULL || e->value == NULL)
         return -1;
     
-    if(e->key!=NULL)
-        free(e->key);
-    if(e->value!=NULL)
-        block_destroy(e->value);
-
+   
+    free(e->key);
+    block_destroy(e->value);
     free(e);
     return 0;
 }

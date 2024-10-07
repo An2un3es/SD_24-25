@@ -100,7 +100,7 @@ int testDuplicate() {
 	
 	free(b);
 
-	if ((b = data_create(data_size, data_str)) == NULL)
+	if ((b = block_create(data_size, data_str)) == NULL)
 		pee("  block_create retornou NULL - O teste não pode prosseguir");
 	
 	b2 = block_duplicate(b);
@@ -110,8 +110,8 @@ int testDuplicate() {
                         && (b->datasize == b2->datasize)
                         && (memcmp(b->data, b2->data, b->datasize) == 0);
 
-	data_destroy(b);
-	data_destroy(b2);
+	block_destroy(b);
+	block_destroy(b2);
 
 	printf("%s\n",result?"passou":"não passou");
 	return result;

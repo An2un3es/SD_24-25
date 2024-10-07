@@ -1,2 +1,9 @@
 
 sd2425_projeto1_headers_v1/.vscode/c_cpp_properties.json
+sd2425_projeto1_headers_v1/object/block.o
+*.o
+sd2425_projeto1_headers_v1/binary/test_block
+sd2425_projeto1_headers_v1/binary/test_serialization
+sd2425_projeto1_headers_v1/binary/test_list
+sd2425_projeto1_headers_v1/binary/test_table
+sd2425_projeto1_headers_v1/binary/test_entry

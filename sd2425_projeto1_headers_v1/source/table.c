@@ -97,7 +97,7 @@ int table_size(struct table_t *t){
     if(t==NULL)
         return -1;
     
-    int i;
+    int i=0;
     int count;
 
     while(i<t->n_linhas){

@@ -72,11 +72,20 @@ int testAdd123RemoveHead() {
 
 	printf("Módulo list -> testAdd123RemoveHead: ");
 	fflush(stdout);
-
-	result = (list_add(list, entry1) == 0);
+	
+	result = (list_add(list, entry1) == 0); //Gucci
 	result = result && (list_add(list, entry2) == 0);
-	result = result && (list_add(list, entry3) == 0);
 
+	printf("%d passou 2 \n", result);
+	fflush(stdout);
+	
+	result = result && (list_add(list, entry3) == 0);
+	
+	printf("%d _ passou 3 caso passe \n", result);
+	fflush(stdout);
+	printf("%d \n", result);
+	fflush(stdout);
+	
 	result = result && (list_remove(list, "abc1") == 0);
 	result = result && (list_get(list, "abc2") == entry2);
 	result = result && (list_get(list, "abc3") == entry3);

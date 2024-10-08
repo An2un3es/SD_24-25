@@ -20,22 +20,11 @@ struct entry_t *entry_create(char *key, struct block_t *value){
     if (key == NULL || value == NULL || value->data == NULL || value ->datasize <= 0) {
         return NULL;  
     }
-
     struct entry_t *entry=(struct entry_t *) malloc(sizeof(struct entry_t));
     if(entry == NULL)
         return NULL;
-    
     entry->key=key;
-    if(entry->key==NULL){
-        free(entry);
-        return NULL;
-    }
     entry->value=value;
-    if(entry->value==NULL){
-        free(entry->key);
-        free(entry);
-        return NULL;
-    }
     return entry;
 
 }
@@ -45,19 +34,19 @@ struct entry_t *entry_create(char *key, struct block_t *value){
  * 1 se e1 > e2 ou -2 em caso de erro.
  */
 int entry_compare(struct entry_t *e1, struct entry_t *e2){
-
+    
     if(e1==NULL || e1->key == NULL || e1->value == NULL || e2==NULL || e2->key == NULL || e2 ->value == NULL)
         return -2;
-    
+   
     int output = strcmp (e1->key,e2->key);
 
     if(output==0){
         return 0;
     }else if(output>0){
         return 1;
-    }else if(output<0){
+    }else
         return -1;
-    }
+    
 
     return -2;
     
@@ -103,14 +92,10 @@ int entry_replace(struct entry_t *e, char *new_key, struct block_t *new_value){
     if(e==NULL || e->key == NULL || e->value == NULL || new_key==NULL || new_value==NULL){
         return -1;
     }
-
-   
     free(e->key);
     e->key=new_key;
     free(e->value);
-    
     e->value=new_value;
-
     return 0;
 
 }

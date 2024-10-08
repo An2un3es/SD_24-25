@@ -78,7 +78,6 @@ int list_add(struct list_t *l, struct entry_t *entry){
      
         struct node_t *new_node= (struct node_t *) malloc(sizeof(struct node_t));
         new_node->entry=entry;
-
         new_node->prox=current_node->prox;
 		current_node->prox=new_node;
     }
@@ -191,25 +190,37 @@ int list_free_keys(char **keys){
  * ou -1 em caso de erro.
  */
 int list_remove(struct list_t *l, char *key){
-    if (key == NULL){
+    if (key == NULL || l == NULL || l->size < 0){
         return -1;
     }
 
     struct node_t *current_node = l->head;
     struct node_t *next;
 
-    while(current_node!=NULL){
+    if(current_node == NULL){
+        return 1;
+        }
+    if(strcmp( l->head->entry->key,key)==0){
+            next= l->head->prox;
+            entry_destroy( l->head->entry);
+            l->head=next;
+            l->size--;
+            return 0;
+    }
 
+    while(current_node ->prox!=NULL){
+        
         if(strcmp(current_node->prox->entry->key,key)==0){
 
             next=current_node->prox->prox;
             entry_destroy(current_node->prox->entry);
             current_node->prox=next;
+            l->size--;
             return 0;
         }
         current_node=current_node->prox;
-
     }
+
     return 1;
 }
 

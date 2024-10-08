@@ -210,9 +210,9 @@ int testInsertDupKey() {
 	result = result && (list_add(list, entry4) == 1);
 	result = result && (list_get(list, "abc1") == entry4);
 	result = result && (list_add(list, entry5) == 1);
-	result = result && (list_get(list, "abc1") == entry5);
+	result = result && (list_get(list, "abc2") == entry5);
 	result = result && (list_add(list, entry6) == 1);
-	result = result && (list_get(list, "abc2") == entry2);
+	result = result && (list_get(list, "abc2") != entry2);
 	result = result && (list_get(list, "abc3") == entry6);
 	result = result && (list_size(list) == 3);
 

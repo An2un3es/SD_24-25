@@ -101,11 +101,11 @@ int entry_replace(struct entry_t *e, char *new_key, struct block_t *new_value){
     }
 
    
-        free(e->key);
-    e->key=strdup(new_key);
-        free(e->value);
+    free(e->key);
+    e->key=new_key;
+    free(e->value);
     
-    e->value=block_duplicate(new_value);
+    e->value=new_value;
 
     return 0;
 

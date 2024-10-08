@@ -18,16 +18,17 @@ struct entry_t *entry_create(char *key, struct block_t *value){
     }
 
     struct entry_t *entry=(struct entry_t *) malloc(sizeof(struct entry_t));
-    if(entry ==NULL)
+    if(entry == NULL)
         return NULL;
     
-    entry->key=strdup(key);
+    entry->key=key;
     if(entry->key==NULL){
         free(entry);
         return NULL;
     }
-    entry->value=block_duplicate(value);
+    entry->value=value;
     if(entry->value==NULL){
+        free(entry->key);
         free(entry);
         return NULL;
     }

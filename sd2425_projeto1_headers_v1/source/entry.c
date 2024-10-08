@@ -46,7 +46,7 @@ struct entry_t *entry_create(char *key, struct block_t *value){
  */
 int entry_compare(struct entry_t *e1, struct entry_t *e2){
 
-    if(e1==NULL || e1->key == NULL || e2->value == NULL || e2==NULL || e2->key == NULL || e2 ->value == NULL)
+    if(e1==NULL || e1->key == NULL || e1->value == NULL || e2==NULL || e2->key == NULL || e2 ->value == NULL)
         return -2;
     
     int output = strcmp (e1->key,e2->key);

@@ -144,7 +144,7 @@ struct entry_t *list_get(struct list_t *l, char *key){
  */
 char **list_get_keys(struct list_t *l){
 
-    if(l==NULL)
+    if(l==NULL || l->head==NULL)
         return NULL;
 
     char **keys_array = (char **)malloc((l->size + 1) * sizeof(char *));

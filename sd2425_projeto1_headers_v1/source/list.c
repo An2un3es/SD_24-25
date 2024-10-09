@@ -58,7 +58,7 @@ int list_add(struct list_t *l, struct entry_t *entry){
         l->size= l->size+1;
         return 0;
 
-    }else if(entry_compare(l->head->entry,entry)==0){
+    }else if(entry_compare(l->head->entry,entry)==0){ //alterar a entry do inicio
 
         entry_destroy(l->head->entry);
         l->head->entry=entry;
@@ -87,7 +87,6 @@ int list_add(struct list_t *l, struct entry_t *entry){
                 entry_destroy(current_node->prox->entry);
                 current_node->prox->entry=entry;
 
-                //entry_replace(current_node->prox->entry,entry->key,entry->value);
                 return 1;
             }
 

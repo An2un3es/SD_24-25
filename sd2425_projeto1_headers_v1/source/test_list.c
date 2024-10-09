@@ -72,15 +72,18 @@ int testAdd123RemoveHead() {
 
 	printf("Módulo list -> testAdd123RemoveHead: ");
 	fflush(stdout);
-	
-	result = (list_add(list, entry1) == 0); //Gucci
+
+	result = (list_add(list, entry1) == 0);
 	result = result && (list_add(list, entry2) == 0);
 	result = result && (list_add(list, entry3) == 0);
+
 	result = result && (list_remove(list, "abc1") == 0);
 	result = result && (list_get(list, "abc2") == entry2);
 	result = result && (list_get(list, "abc3") == entry3);
 	result = result && (list_size(list) == 2);
+
 	list_destroy(list);
+
 	printf("%s\n",result?"passou":"não passou");
 	return result;
 }
@@ -200,29 +203,19 @@ int testInsertDupKey() {
 	fflush(stdout);
 
 	result = (list_add(list, entry1) == 0);
-	
 	result = result && (list_add(list, entry2) == 0);
 	result = result && (list_add(list, entry3) == 0);
-	
 	result = result && (list_get(list, "abc1") == entry1);
 	result = result && (list_get(list, "abc2") == entry2);
-
-	result = result && (list_add(list, entry4)==1);
-
+	result = result && (list_add(list, entry4) == 1);
 	result = result && (list_get(list, "abc1") == entry4);
-
 	result = result && (list_add(list, entry5) == 1);
-	
-	result = result && (list_get(list, "abc2") == entry5);
-	
+	result = result && (list_get(list, "abc2") == entry5); // V2.b
 	result = result && (list_add(list, entry6) == 1);
-	
-	result = result && (list_get(list, "abc2") != entry2);
-	
+	result = result && (list_get(list, "abc2") != entry2); // V2.c
 	result = result && (list_get(list, "abc3") == entry6);
-	
 	result = result && (list_size(list) == 3);
-	
+
 	list_destroy(list);
 
 	printf("%s\n",result?"passou":"não passou");

@@ -31,20 +31,45 @@ unsigned int hash (char *key, struct table_t *t){
  */
 struct table_t *table_create(int n){
 
-    struct list_t *l [n];
+    struct table_t *table = malloc(sizeof(struct table_t));
+
+    if (table==NULL) {
+        return NULL; 
+    }
+
+    table->n_linhas = n;
+    table->listas = malloc(n * sizeof(struct list_t *));
+
+    if (table->listas==NULL) {
+        free(table); 
+        return NULL; 
+    }
+
+    
+    for (int i = 0; i < n; i++) {
+        table->listas[i] = list_create(0);
+    }
+
+    return table; 
+
+
+
+    /*struct list_t **l [n];
+
     if (n==0)
         return NULL;
     
     struct table_t *t = (struct table_t *) malloc(sizeof(struct table_t));
+    t->listas = malloc(n * sizeof(struct list_t *));
+
+    for (int i=0; i<n;i++){
+        l[i]=list_create(0);
+    }
 
     t->listas=l;
     t->n_linhas=n;
 
-    for (int i=0; i<n;i++){
-        t->listas[i]=NULL;
-    }
-
-    return t;
+    return t;*/
 }
 
 /* Função para adicionar um par chave-valor à tabela. Os dados de entrada
@@ -102,7 +127,7 @@ int table_size(struct table_t *t){
         return -1;
     
     int i=0;
-    int count;
+    int count=0;;
 
     while(i<t->n_linhas){
         struct list_t * list = t->listas[i];

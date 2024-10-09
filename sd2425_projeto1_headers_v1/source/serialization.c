@@ -17,8 +17,9 @@ const int ERROR_SERIALIZATION = -1;
 * | nkeys | key1 | key2 | key3 |
 * Retorna o tamanho do buffer alocado ou -1 em caso de erro.
 */
-int keyArray_to_buffer(char **keys, char **keys_buf){ //não esquecer de limpar a memoria aonde chamar
-      if (keys == NULL || keys_buf == NULL) { //erro!
+int keyArray_to_buffer(char **keys, char **keys_buf){ 
+    
+      if (keys == NULL || keys_buf == NULL) { 
         return ERROR_SERIALIZATION;
     }
     // Para seguir o formato pedido:
@@ -49,7 +50,7 @@ int keyArray_to_buffer(char **keys, char **keys_buf){ //não esquecer de limpar 
         strcpy(ptr, keys[i]); // Copiar a string incluindo o terminador nulo
         ptr += strlen(keys[i]) + 1;
     }
-    // Retorna o tamanho total do buffer
+
     return buffer_size;
 }
 /* De-serializa a mensagem contida em keys_buf, colocando-a num array de

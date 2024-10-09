@@ -127,7 +127,7 @@ int table_size(struct table_t *t){
         return -1;
     
     int i=0;
-    int count=0;;
+    int count=0;
 
     while(i<t->n_linhas){
         struct list_t * list = t->listas[i];

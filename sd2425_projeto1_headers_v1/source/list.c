@@ -46,7 +46,11 @@ int list_add(struct list_t *l, struct entry_t *entry){
     if(l==NULL || entry==NULL)
         return -1;
     //adicionar a entry o inicio
+    
     if(l->head==NULL || entry_compare(l->head->entry,entry)>0){
+
+        
+
         struct node_t *new_node= (struct node_t *) malloc(sizeof(struct node_t));
         new_node->entry=entry;
         new_node->prox = l->head; 
@@ -54,7 +58,16 @@ int list_add(struct list_t *l, struct entry_t *entry){
         l->size= l->size+1;
         return 0;
 
-    }else{//adicionar a entry no meio/fim
+    }else if(entry_compare(l->head->entry,entry)==0){
+
+        entry_destroy(l->head->entry);
+        l->head->entry=entry;
+
+        //entry_replace(current_node->prox->entry,entry->key,entry->value);
+
+        return 1;
+    }
+    else{//adicionar a entry no meio/fim
 
         struct node_t *current_node = l->head;
         
@@ -70,7 +83,11 @@ int list_add(struct list_t *l, struct entry_t *entry){
             }
 
             if(valor==0){
-                entry_replace(current_node->prox->entry,entry->key,entry->value);
+
+                entry_destroy(current_node->prox->entry);
+                current_node->prox->entry=entry;
+
+                //entry_replace(current_node->prox->entry,entry->key,entry->value);
                 return 1;
             }
 
@@ -82,9 +99,8 @@ int list_add(struct list_t *l, struct entry_t *entry){
 		current_node->prox=new_node;
     }
 
-     l->size++;
-
-     return 0;        
+    l->size++;
+    return 0;        
 
 }
 

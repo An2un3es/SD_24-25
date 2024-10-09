@@ -200,44 +200,29 @@ int testInsertDupKey() {
 	fflush(stdout);
 
 	result = (list_add(list, entry1) == 0);
-	printf("passou 1  %d\n ", result);
-	fflush(stdout);
+	
 	result = result && (list_add(list, entry2) == 0);
-	printf("passou 2  %d\n ", result);
-	fflush(stdout);
 	result = result && (list_add(list, entry3) == 0);
-	printf("passou 3  %d\n ", result);
-	fflush(stdout);
+	
 	result = result && (list_get(list, "abc1") == entry1);
-	printf("passou 4  %d\n ", result);;
-	fflush(stdout);
 	result = result && (list_get(list, "abc2") == entry2);
-	printf("passou 5  %d\n ", result);
-	fflush(stdout);
-	result = result && (list_add(list, entry4) == 1);
-	printf("passou 6  %d\n ", result);
-	fflush(stdout);
+
+	result = result && (list_add(list, entry4)==1);
+
 	result = result && (list_get(list, "abc1") == entry4);
-	printf("passou 7  %d\n ", result);
-	fflush(stdout);
+
 	result = result && (list_add(list, entry5) == 1);
-	printf("passou 8  %d\n ", result);
-	fflush(stdout);
+	
 	result = result && (list_get(list, "abc2") == entry5);
-	printf("passou 9  %d\n ", result);
-	fflush(stdout);
+	
 	result = result && (list_add(list, entry6) == 1);
-	printf("passou 10  %d\n ", result);
-	fflush(stdout);
+	
 	result = result && (list_get(list, "abc2") != entry2);
-	printf("passou 11  %d\n ", result);
-	fflush(stdout);
+	
 	result = result && (list_get(list, "abc3") == entry6);
-	printf("passou 12  %d\n ", result);
-	fflush(stdout);
+	
 	result = result && (list_size(list) == 3);
-	printf("passou 13  %d\n ", result);
-	fflush(stdout);
+	
 	list_destroy(list);
 
 	printf("%s\n",result?"passou":"não passou");

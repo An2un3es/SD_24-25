@@ -64,17 +64,20 @@ int keyArray_to_buffer(char **keys, char **keys_buf){
 */
 char** buffer_to_keyArray(char *keys_buf){
 
-    
     if (keys_buf == NULL) 
         return NULL; // Buffer inválido
-    //pegar o num de chaves de volta
+   
     int nkeys;
     memcpy(&nkeys,keys_buf,sizeof(int));
+    nkeys = ntohl(nkeys);
     if(nkeys <= 0)
         return NULL; // numero invalido, temde haver ao menos 1 key!
+
     char ** keys_array = (char **) malloc((nkeys + 1) * sizeof(char *)); //alocar memoria para o array todo
     if (keys_array == NULL)
         return NULL; // falha alocação
+
+    
 
     char * ptr = keys_buf + sizeof(int);
 
@@ -82,7 +85,7 @@ char** buffer_to_keyArray(char *keys_buf){
     for(int i = 0; i <nkeys;i++){
         int len = strlen(ptr);
         keys_array[i] = (char *) malloc((len + 1)* sizeof(char));
-        if(keys_array == NULL){
+        if(keys_array[i] == NULL){
             //Deu ruim pessoal, falha na alocação, temos que liberar tudinho
             for(int j = 0; j< i; j++)
                 free(keys_array[j]);
@@ -93,7 +96,7 @@ char** buffer_to_keyArray(char *keys_buf){
         ptr += len + 1; //mover o ptr para a prox string
 
     }
-        //Ultimo elemento deve sempre ser  NULL
+    
     keys_array[nkeys] = NULL;
     return keys_array;
 

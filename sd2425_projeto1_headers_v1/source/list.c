@@ -43,7 +43,7 @@ struct list_t *list_create(){
  */
 int list_add(struct list_t *l, struct entry_t *entry){
 
-    if(l==NULL || entry==NULL)
+    if(l==NULL || entry==NULL|| entry->value==NULL || entry->key==NULL)
         return -1;
     //adicionar a entry o inicio
     
@@ -56,6 +56,7 @@ int list_add(struct list_t *l, struct entry_t *entry){
         new_node->prox = l->head; 
         l->head=new_node;
         l->size= l->size+1;
+
         return 0;
 
     }else if(entry_compare(l->head->entry,entry)==0){ //alterar a entry do inicio
@@ -64,7 +65,6 @@ int list_add(struct list_t *l, struct entry_t *entry){
         l->head->entry=entry;
 
         //entry_replace(current_node->prox->entry,entry->key,entry->value);
-
         return 1;
     }
     else{//adicionar a entry no meio/fim
@@ -86,7 +86,6 @@ int list_add(struct list_t *l, struct entry_t *entry){
 
                 entry_destroy(current_node->prox->entry);
                 current_node->prox->entry=entry;
-
                 return 1;
             }
 
@@ -245,17 +244,22 @@ int list_remove(struct list_t *l, char *key){
  */
 int list_destroy(struct list_t *l){
 
+
     if(l==NULL)
         return -1;
     
-    struct node_t *current_node = l->head;
+    struct node_t *current = l->head;
+    struct node_t *next;
 
-    while(current_node!=NULL){
-        
-        entry_destroy(current_node->entry);
-        current_node=current_node->prox;
+    
+    while (current != NULL) {
+        next = current->prox;
+        entry_destroy(current->entry); 
+        free(current); 
+        current = next;
     }
-
+    
+    
     free(l);
     return 0;
 }

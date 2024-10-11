@@ -1,6 +1,14 @@
 # Definindo variáveis
 CC = gcc
-CFLAGS = -Iinclude -Wall -g0
+CFLAGS = -Iinclude -Wall
+DEBUG = 0
+
+ifeq ($(DEBUG), 1)
+    CFLAGS += -g
+else
+    CFLAGS += -g0
+endif
+
 SRC_DIR = source
 OBJ_DIR = object
 BIN_DIR = binary

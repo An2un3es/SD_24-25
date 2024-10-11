@@ -104,11 +104,10 @@ int entry_replace(struct entry_t *e, char *new_key, struct block_t *new_value){
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
 int entry_destroy(struct entry_t *e){
-    
     if(e==NULL || e->key == NULL || e->value == NULL)
         return -1;
     
-   
+
     free(e->key);
     block_destroy(e->value);
     free(e);

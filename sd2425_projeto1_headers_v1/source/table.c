@@ -14,9 +14,10 @@ Carolina Romeira - 59867
 
 
 
-unsigned int hash (char *key, struct table_t *t){
+int hash (char *key, struct table_t *t){
+
     int size= strlen(key);
-    unsigned int total = 0;
+    int total = 0;
     for(int i =0; i<size;i++){
         total+= key[i];
         total= total % t->n_linhas;
@@ -47,29 +48,10 @@ struct table_t *table_create(int n){
 
     
     for (int i = 0; i < n; i++) {
-        table->listas[i] = list_create(0);
+        table->listas[i] = list_create();
     }
 
     return table; 
-
-
-
-    /*struct list_t **l [n];
-
-    if (n==0)
-        return NULL;
-    
-    struct table_t *t = (struct table_t *) malloc(sizeof(struct table_t));
-    t->listas = malloc(n * sizeof(struct list_t *));
-
-    for (int i=0; i<n;i++){
-        l[i]=list_create(0);
-    }
-
-    t->listas=l;
-    t->n_linhas=n;
-
-    return t;*/
 }
 
 /* Função para adicionar um par chave-valor à tabela. Os dados de entrada
@@ -80,21 +62,42 @@ struct table_t *table_create(int n){
  * Retorna 0 (ok) ou -1 em caso de erro.
  */
 int table_put(struct table_t *t, char *key, struct block_t *value){
-    if (t==NULL || value==NULL || key ==NULL)
-        return -1;
-    
-    int index = hash(key,t);
-    struct list_t *list= t->listas[index];
 
-    if(list==NULL)
+    if (t == NULL || value == NULL || key == NULL)
         return -1;
 
-    struct entry_t *entry =entry_create(key,value);
-    if(entry==NULL){
-        entry_destroy(entry);
+    int index = hash(key, t);
+    struct list_t *list = t->listas[index];
+
+    if (list == NULL)
+        return -1;
+
+    // Cria uma cópia da chave
+    char *key_copy = strdup(key);
+    if (key_copy == NULL) {
+        return -1; 
+    }
+
+    // Cria uma cópia do bloco usando block_duplicate
+    struct block_t *value_copy = block_duplicate(value);
+    if (value_copy == NULL) {
+        free(key_copy); 
+        return -1; 
+    }
+
+    // Cria a nova entry
+    struct entry_t *entry = entry_create(key_copy, value_copy);
+    if (entry == NULL) {
+        free(key_copy); 
+        block_destroy(value_copy); 
+        return -1; 
+    }
+
+    // Adiciona a entry à lista
+    if (list_add(list, entry) == -1) {  
+        entry_destroy(entry); 
         return -1;
     }
-    list_add(list,entry);
 
     return 0;
 }
@@ -111,11 +114,13 @@ struct block_t *table_get(struct table_t *t, char *key){
     int index = hash(key,t);
     struct list_t *list= t->listas[index];
 
-    struct entry_t *entry =list_get(list,key);
-    if(entry==NULL)
+    struct entry_t *entry_real =list_get(list,key);
+    struct entry_t *entry_copia = entry_duplicate(entry_real);
+    
+    if(entry_copia==NULL)
         return NULL;
     
-    return entry->value;
+    return entry_copia->value;
 
 }
 /* Função que conta o número de entries na tabela passada como argumento.
@@ -228,12 +233,14 @@ int table_remove(struct table_t *t, char *key){
  * Retorna 0 (OK) ou -1 em caso de erro.
  */
 int table_destroy(struct table_t *t){
-    if(t==NULL)
+
+    if(t==NULL || t->listas<0|| t->listas==NULL)
         return -1;
     
-    for(int i =0; i<t->n_linhas;i++){
+    for(int i =0; i<t->n_linhas; i++){
 
-        list_destroy(t->listas[i]);
+        struct list_t * lista =t->listas[i];
+        list_destroy(lista);
     }
 
     free(t);

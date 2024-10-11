@@ -31,6 +31,7 @@ int keyArray_to_buffer(char **keys, char **keys_buf){
     if (nkeys == 0)
         return -1; //array vazio... 
     // 2  Calcular o tamanho necessário para o buffer
+
     int buffer_size = sizeof(int); // nkeys
     for (int i = 0; i < nkeys; i++) {
         buffer_size += strlen(keys[i]) + 1; // +1 para incluir o terminador nulo de cada string
@@ -43,7 +44,8 @@ int keyArray_to_buffer(char **keys, char **keys_buf){
     }
     // Preencher o buffer
     char *ptr = *keys_buf;
-    memcpy(ptr, &nkeys, sizeof(int)); // Serializar o número de chaves (nkeys) 
+    int nkeys_network_order = htonl(nkeys);
+    memcpy(ptr, &nkeys_network_order, sizeof(int)); // Serializar o número de chaves (nkeys) 
     ptr += sizeof(int); // move o ponteiro a frente!
     // Serializar cada string (key)
     for (int i = 0; i < nkeys; i++) {
@@ -61,6 +63,8 @@ int keyArray_to_buffer(char **keys, char **keys_buf){
 * Retorna o array de strings ou NULL em caso de erro.
 */
 char** buffer_to_keyArray(char *keys_buf){
+
+    
     if (keys_buf == NULL) 
         return NULL; // Buffer inválido
     //pegar o num de chaves de volta

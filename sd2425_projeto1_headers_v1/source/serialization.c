@@ -6,7 +6,9 @@ Carolina Romeira - 59867
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <arpa/inet.h>
 #include "serialization.h"
+
 const int ERROR_SERIALIZATION = -1;
 
 

@@ -92,11 +92,16 @@ int entry_replace(struct entry_t *e, char *new_key, struct block_t *new_value){
     if(e==NULL || e->key == NULL || e->value == NULL || new_key==NULL || new_value==NULL){
         return -1;
     }
-    free(e->key);
-    e->key=new_key;
-    free(e->value);
-    e->value=new_value;
+    if(e->key != new_key){
+        free(e->key);
+        e->key=new_key;
+    }
+    if(e->value != new_value){
+        free(e->value);
+        e->value=new_value;
+    }
     return 0;
+    
 
 }
 

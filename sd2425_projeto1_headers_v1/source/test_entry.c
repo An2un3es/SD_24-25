@@ -200,6 +200,29 @@ int testCompare() {
 }
 
 /**************************************************************/
+int testReplaceWithSelf() {
+    int result;
+    char *key = strdup("abc");
+    struct block_t *value = block_create(4, strdup("1234"));
+    struct entry_t *entry;
+
+    printf("Módulo entry -> testReplaceWithSelf: ");
+    fflush(stdout);
+
+    // Criar entrada
+    entry = entry_create(key, value);
+    result = (entry != NULL);
+
+    // Substituir a entrada por ela mesma (mesmo chave e valor)
+    if (entry) {
+        result = result && (entry_replace(entry, key, value) == 0);
+        result = result && (entry->key == key) && (entry->value == value);  // Deve continuar igual
+        entry_destroy(entry);
+    }
+
+    printf("%s\n", result ? "passou" : "não passou");
+    return result;
+}
 int main() {
 	int score = 0;
 
@@ -214,6 +237,7 @@ int main() {
 	score += testReplace();
 
 	score += testCompare();
+	score += testReplaceWithSelf();
 
 	printf("teste entry (score): %d/5\n", score);
 

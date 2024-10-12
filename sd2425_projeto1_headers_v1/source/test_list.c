@@ -269,6 +269,42 @@ int testGetKeys() {
 }
 
 /**************************************************************/
+int testAddMultipleEntriesAndCheckOrder() {
+    int result;
+    char *key1 = strdup("abc1");
+    char *key2 = strdup("abc2");
+    char *key3 = strdup("abc3");
+    char *key4 = strdup("abc4");
+    struct block_t *value1 = block_create(3, strdup("123"));
+    struct block_t *value2 = block_create(3, strdup("456"));
+    struct block_t *value3 = block_create(3, strdup("789"));
+    struct block_t *value4 = block_create(3, strdup("012"));
+    struct entry_t *entry1 = entry_create(key1, value1);
+    struct entry_t *entry2 = entry_create(key2, value2);
+    struct entry_t *entry3 = entry_create(key3, value3);
+    struct entry_t *entry4 = entry_create(key4, value4);
+    struct list_t *list = list_create();
+
+    printf("Módulo list -> testAddMultipleEntriesAndCheckOrder: ");
+    fflush(stdout);
+
+    list_add(list, entry1);
+    list_add(list, entry3);
+    list_add(list, entry2);
+    list_add(list, entry4);
+
+    char **keys = list_get_keys(list);
+    result = (strcmp(keys[0], "abc1") == 0) && (strcmp(keys[1], "abc2") == 0)
+          && (strcmp(keys[2], "abc3") == 0) && (strcmp(keys[3], "abc4") == 0);
+
+    list_free_keys(keys);
+    list_destroy(list);
+
+    printf("%s\n", result ? "passou" : "não passou");
+    return result;
+}
+
+/**************************************************************/
 int main() {
 	int score = 0;
 
@@ -289,6 +325,7 @@ int main() {
 	score += testInsertDupKey();
 
 	score += testGetKeys();
+	score+= testAddMultipleEntriesAndCheckOrder();
 
 	printf("teste list (score): %d/8\n", score);
 

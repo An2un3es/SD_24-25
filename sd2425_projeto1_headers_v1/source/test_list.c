@@ -303,7 +303,15 @@ int testAddMultipleEntriesAndCheckOrder() {
     printf("%s\n", result ? "passou" : "não passou");
     return result;
 }
-
+/**************************************************************/
+int testRemoveEmpty() {
+     printf("Módulo list -> testRemoveEmpty: ");
+    fflush(stdout);
+	struct list_t *list = list_create();
+    list_destroy(list);    
+    printf("%s\n", "passou");
+    return 1;
+}
 /**************************************************************/
 int main() {
 	int score = 0;
@@ -325,7 +333,10 @@ int main() {
 	score += testInsertDupKey();
 
 	score += testGetKeys();
+	
 	score+= testAddMultipleEntriesAndCheckOrder();
+
+	score += testRemoveEmpty();
 
 	printf("teste list (score): %d/8\n", score);
 

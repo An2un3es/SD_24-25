@@ -135,20 +135,153 @@ int testDeserialize(){
 	return result;
 }
 
+
+
+/**************************************************************/
+int testEmptyKeySerialize() {
+    struct list_t *list = list_create();
+    char *key = strdup("");
+    struct block_t *value = block_create(3, strdup("value"));
+    struct entry_t *entry = entry_create(key, value);
+    
+    printf("Módulo serialize -> testEmptyKeySerialize: ");
+    fflush(stdout);
+
+    list_add(list, entry);
+    char *keys_buf;
+
+    int size = keyArray_to_buffer(list_get_keys(list), &keys_buf);
+    
+    // Verifica se o tamanho é esperado
+    assert(size > 0); // Deve ser maior que zero mesmo para chave vazia
+
+    // Verifica se a chave vazia é a primeira na serialização
+    assert(strcmp(keys_buf + sizeof(int), "") == 0);
+
+    list_destroy(list);
+    
+    printf("%s\n", "passou");
+    return 1;
+}
+
+/**************************************************************/
+int testLongKeySerialize() {
+    struct list_t *list = list_create();
+    char *key = (char *)malloc(1024); // Chave longa
+    memset(key, 'a', 1023);
+    key[1023] = '\0'; // Null-terminator
+    struct block_t *value = block_create(3, strdup("value"));
+    struct entry_t *entry = entry_create(key, value);
+    
+    printf("Módulo serialize -> testLongKeySerialize: ");
+    fflush(stdout);
+
+    list_add(list, entry);
+    char *keys_buf;
+
+    int size = keyArray_to_buffer(list_get_keys(list), &keys_buf);
+
+    // Verifica se o tamanho é esperado
+    assert(size > 0);
+    
+    // Verifica se a chave longa está correta
+    assert(strcmp(keys_buf + sizeof(int), key) == 0);
+
+    list_destroy(list);
+   
+    printf("%s\n", "passou");
+    return 1;
+}
+
+/**************************************************************/
+int testSpecialCharacterKeySerialize() {
+    struct list_t *list = list_create();
+    char *key = strdup("key with spaces & special characters #!$%");
+    struct block_t *value = block_create(3, strdup("value"));
+    struct entry_t *entry = entry_create(key, value);
+    
+    printf("Módulo serialize -> testSpecialCharacterKeySerialize: ");
+    fflush(stdout);
+
+    list_add(list, entry);
+    char *keys_buf;
+
+    int size = keyArray_to_buffer(list_get_keys(list), &keys_buf);
+
+    // Verifica se o tamanho é esperado
+    assert(size > 0);
+
+    // Verifica se a chave especial está correta
+    assert(strcmp(keys_buf + sizeof(int), key) == 0);
+
+    list_destroy(list);
+
+    
+    printf("%s\n", "passou");
+    return 1;
+}
+
+/**************************************************************/
+int testNullValueSerialize() {
+    struct list_t *list = list_create();
+    char *key = strdup("key");
+    struct entry_t *entry = entry_create(key, NULL); // Valor nulo
+    
+    printf("Módulo serialize -> testNullValueSerialize: ");
+    fflush(stdout);
+
+    list_add(list, entry);
+    char *keys_buf;
+
+    // O teste deve verificar como keyArray_to_buffer lida com entradas nulas
+    int size = keyArray_to_buffer(list_get_keys(list), &keys_buf);
+
+    // O tamanho deve ser maior que zero mesmo que o valor seja nulo
+    assert(size < 0); 
+
+    list_destroy(list);
+
+    printf("%s\n", "passou");
+    return 1;
+}
+
+/**************************************************************/
+int testInvalidBufferDeserialize() {
+    char *invalid_buf = (char *)malloc(10); // Um buffer inválido (não contém dados válidos)
+    
+    printf("Módulo serialize -> testInvalidBufferDeserialize: ");
+    fflush(stdout);
+
+    char **keys = buffer_to_keyArray(invalid_buf); // Espera-se que retorne NULL
+
+    // Verifica se o retorno é NULL
+    assert(keys == NULL);
+
+    free(invalid_buf);
+    printf("%s\n", "passou");
+    return 1;
+}
+
 /**************************************************************/
 int main() {
-	int score = 0;
+    int score = 0;
 
-	printf("\nIniciando o teste do módulo serialize \n");
+    printf("\nIniciando o teste do módulo serialize \n");
 
-	score += testSerialize();
+    score += testSerialize();
+    score += testDeserialize();
 
-	score += testDeserialize();
+    // Testes complementares
+    score += testEmptyKeySerialize();
+    score += testLongKeySerialize();
+    score += testSpecialCharacterKeySerialize();
+    score += testNullValueSerialize();
+    score += testInvalidBufferDeserialize();
 
-	printf("teste serialize (score): %d/2\n", score);
+    printf("teste serialize (score): %d/%d\n", score, 7); // Atualiza o número total de testes
 
-	if (score == 2)
-        	return 0;
-	else
-        	return -1;
+    if (score == 8)
+        return 0;
+    else
+        return -1;
 }

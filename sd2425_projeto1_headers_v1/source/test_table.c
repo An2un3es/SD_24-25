@@ -254,28 +254,147 @@ int testGetKeys() {
 	return result;
 }
 
+int testInsertMaxSize() {
+    struct table_t *table = table_create(5);
+    char *key = (char *)malloc(16 * sizeof(char));
+    struct block_t *block;
+
+    printf("Módulo table -> testInsertMaxSize: ");
+    fflush(stdout);
+
+    for (int i = 0; i < 5; i++) {
+        sprintf(key, "key-%d", i);
+        block = block_create(strlen(key) + 1, strdup(key));
+        table_put(table, key, block);
+        block_destroy(block);
+    }
+
+    // Testa inserção quando a tabela está cheia
+    sprintf(key, "key-overflow");
+    block = block_create(strlen(key) + 1, strdup(key));
+    int result = table_put(table, key, block);  // Espera-se que retorne algum erro
+    block_destroy(block);
+
+    assert(result == 0); // Verifica se a inserção falhou
+    printf("passou\n");
+
+    free(key);
+    table_destroy(table);
+    return 1;
+}
+
+/**************************************************************/
+int testRemoveFromEmptyTable() {
+    struct table_t *table = table_create(5);
+    printf("Módulo table -> testRemoveFromEmptyTable: ");
+    fflush(stdout);
+
+    int result = (table_remove(table, "nonexistent") == 1);
+    printf("%s\n", result ? "passou" : "não passou");
+
+    table_destroy(table);
+    return result;
+}
+
+/**************************************************************/
+int testInsertDuplicateKeys() {
+    struct table_t *table = table_create(5);
+    char *key = (char *)malloc(16 * sizeof(char));
+    struct block_t *block1, *block2;
+
+    printf("Módulo table -> testInsertDuplicateKeys: ");
+    fflush(stdout);
+
+    sprintf(key, "duplicate-key");
+    block1 = block_create(strlen(key) + 1, strdup("value1"));
+    table_put(table, key, block1);
+
+    block2 = block_create(strlen(key) + 1, strdup("value2"));
+    table_put(table, key, block2);  // Insere chave duplicada
+
+    struct block_t *retrieved = table_get(table, key);
+    int result = (strcmp(retrieved->data, "value2") == 0);  // Espera-se que o valor seja "value2"
+
+    block_destroy(retrieved);
+    printf("%s\n", result ? "passou" : "não passou");
+
+    block_destroy(block1);
+    block_destroy(block2);
+    free(key);
+    table_destroy(table);
+    return result;
+}
+
+/**************************************************************/
+int testRemoveAllElements() {
+    struct table_t *table = table_create(10);
+    char *key = (char *)malloc(16 * sizeof(char));
+    int result = 1;
+
+    printf("Módulo table -> testRemoveAllElements: ");
+    fflush(stdout);
+
+    for (int i = 0; i < 10; i++) {
+        sprintf(key, "key-%d", i);
+        struct block_t *block = block_create(strlen(key) + 1, strdup(key));
+        table_put(table, key, block);
+        block_destroy(block);
+    }
+
+    // Remove todos os elementos
+    for (int i = 0; i < 10; i++) {
+        sprintf(key, "key-%d", i);
+        result = result && (table_remove(table, key) == 0);  // Espera-se que retorne 0
+    }
+
+    result = result && (table_size(table) == 0);  // A tabela deve estar vazia
+    printf("%s\n", result ? "passou" : "não passou");
+
+    free(key);
+    table_destroy(table);
+    return result;
+}
+
+
+/**************************************************************/
+int testRetrieveNonexistentKey() {
+    struct table_t *table = table_create(5);
+    printf("Módulo table -> testRetrieveNonexistentKey: ");
+    fflush(stdout);
+
+    struct block_t *result = table_get(table, "nonexistent");
+    int test_result = (result == NULL);  // Espera-se que o resultado seja NULL
+    printf("%s\n", test_result ? "passou" : "não passou");
+
+    table_destroy(table);
+    return test_result;
+}
+
 /**************************************************************/
 int main() {
-	int score = 0;
+    int score = 0;
 
-	printf("\nIniciando teste do módulo table \n");
+    printf("\nIniciando teste do módulo table \n");
 
-	score += testEmptyTable();
+    // Testes existentes
+    score += testEmptyTable();
+    score += testPutInexistente();
+    score += testPutExistente();
+    score += testDelInexistente();
+    score += testDelExistente();
+    score += testGetKeys();
 
-	score += testPutInexistente();
+    // Novos testes complementares
+    score += testInsertMaxSize();
+    score += testRemoveFromEmptyTable();
+    score += testInsertDuplicateKeys();
+    score += testRemoveAllElements();
+    score += testRetrieveNonexistentKey();
 
-	score += testPutExistente();
+    printf("teste table (score): %d/11\n", score);
 
-	score += testDelInexistente();
-
-	score += testDelExistente();
-
-	score += testGetKeys();
-
-	printf("teste table (score): %d/6\n",score);
-
-	if (score == 6)
-        	return 0;
-	else
-        	return -1;
+    if (score == 8)
+        return 0;
+    else
+        return -1;
 }

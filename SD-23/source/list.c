@@ -53,7 +53,7 @@ int list_add(struct list_t *l, struct entry_t *entry){
 
         struct node_t *new_node= (struct node_t *) malloc(sizeof(struct node_t));
         new_node->entry=entry;
-        new_node->prox = l->head; 
+        new_node->next = l->head; 
         l->head=new_node;
         l->size= l->size+1;
 
@@ -64,28 +64,28 @@ int list_add(struct list_t *l, struct entry_t *entry){
         entry_destroy(l->head->entry);
         l->head->entry=entry;
 
-        //entry_replace(current_node->prox->entry,entry->key,entry->value);
+        //entry_replace(current_node->next->entry,entry->key,entry->value);
         return 1;
     }
     else{//adicionar a entry no meio/fim
 
         struct node_t *current_node = l->head;
         
-        if (current_node->prox!=NULL){
+        if (current_node->next!=NULL){
 
-            int valor = entry_compare(current_node->prox->entry,entry);
+            int valor = entry_compare(current_node->next->entry,entry);
             
-            while (current_node->prox!=NULL && valor<0){
+            while (current_node->next!=NULL && valor<0){
                
-                current_node = current_node->prox; 
-                valor = current_node->prox == NULL?valor:entry_compare(current_node->prox->entry,entry);
+                current_node = current_node->next; 
+                valor = current_node->next == NULL?valor:entry_compare(current_node->next->entry,entry);
     
             }
 
             if(valor==0){
 
-                entry_destroy(current_node->prox->entry);
-                current_node->prox->entry=entry;
+                entry_destroy(current_node->next->entry);
+                current_node->next->entry=entry;
                 return 1;
             }
 
@@ -93,8 +93,8 @@ int list_add(struct list_t *l, struct entry_t *entry){
      
         struct node_t *new_node= (struct node_t *) malloc(sizeof(struct node_t));
         new_node->entry=entry;
-        new_node->prox=current_node->prox;
-		current_node->prox=new_node;
+        new_node->next=current_node->next;
+		current_node->next=new_node;
     }
 
     l->size++;
@@ -128,7 +128,7 @@ struct entry_t *list_get(struct list_t *l, char *key){
         if(strcmp(current_node->entry->key,key)==0){
             return current_node->entry;
         }
-        current_node=current_node->prox;
+        current_node=current_node->next;
     }
 
     return NULL;
@@ -172,7 +172,7 @@ char **list_get_keys(struct list_t *l){
             free(keys_array);
             return NULL;
         }
-        current_node = current_node->prox;
+        current_node = current_node->next;
     }
     
     keys_array[i] = NULL;
@@ -215,24 +215,24 @@ int list_remove(struct list_t *l, char *key){
         return 1;
         }
     if(strcmp( l->head->entry->key,key)==0){
-            next= l->head->prox;
+            next= l->head->next;
             entry_destroy( l->head->entry);
             l->head=next;
             l->size--;
             return 0;
     }
 
-    while(current_node ->prox!=NULL){
+    while(current_node ->next!=NULL){
         
-        if(strcmp(current_node->prox->entry->key,key)==0){
+        if(strcmp(current_node->next->entry->key,key)==0){
 
-            next=current_node->prox->prox;
-            entry_destroy(current_node->prox->entry);
-            current_node->prox=next;
+            next=current_node->next->next;
+            entry_destroy(current_node->next->entry);
+            current_node->next=next;
             l->size--;
             return 0;
         }
-        current_node=current_node->prox;
+        current_node=current_node->next;
     }
 
     return 1;
@@ -253,7 +253,7 @@ int list_destroy(struct list_t *l){
 
     
     while (current != NULL) {
-        next = current->prox;
+        next = current->next;
         entry_destroy(current->entry); 
         free(current); 
         current = next;

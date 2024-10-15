@@ -1,11 +1,9 @@
 #ifndef _BLOCK_H
 #define _BLOCK_H /* Módulo BLOCK */
 
-
 /* Estrutura que define um bloco de dados genérico.
  */
 struct block_t {
-	
 	int datasize; /* Tamanho do bloco de dados */
 	void *data;   /* Conteúdo arbitrário */
 };

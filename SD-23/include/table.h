@@ -25,6 +25,7 @@ int table_put(struct table_t *t, char *key, struct block_t *value);
  * NULL se não encontrar a entry ou em caso de erro.
  */
 struct block_t *table_get(struct table_t *t, char *key);
+
 /* Função que conta o número de entries na tabela passada como argumento.
  * Retorna o tamanho da tabela ou -1 em caso de erro.
  */

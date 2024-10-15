@@ -3,11 +3,13 @@
 
 #include "list.h"
 
-/* Esta estrutura define o par {chave, valor} para a tabela
- */
 struct table_t {
-	struct list_t ** listas;
-	int n_linhas;
+	struct list_t **lists;
+	int size;
 };
+
+/* Função que calcula o índice da lista a partir da chave
+ */
+int hash_code(char *key, int n);
 
 #endif

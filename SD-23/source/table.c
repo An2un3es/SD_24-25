@@ -20,7 +20,7 @@ int hash (char *key, struct table_t *t){
     int total = 0;
     for(int i =0; i<size;i++){
         total+= key[i];
-        total= total % t->n_linhas;
+        total= total % t->size;
     }
 
     return total;
@@ -38,17 +38,17 @@ struct table_t *table_create(int n){
         return NULL; 
     }
 
-    table->n_linhas = n;
-    table->listas = malloc(n * sizeof(struct list_t *));
+    table->size = n;
+    table->lists = malloc(n * sizeof(struct list_t *));
 
-    if (table->listas==NULL) {
+    if (table->lists==NULL) {
         free(table); 
         return NULL; 
     }
 
     
     for (int i = 0; i < n; i++) {
-        table->listas[i] = list_create();
+        table->lists[i] = list_create();
     }
 
     return table; 
@@ -67,7 +67,7 @@ int table_put(struct table_t *t, char *key, struct block_t *value){
         return -1;
 
     int index = hash(key, t);
-    struct list_t *list = t->listas[index];
+    struct list_t *list = t->lists[index];
 
     if (list == NULL)
         return -1;
@@ -112,7 +112,7 @@ struct block_t *table_get(struct table_t *t, char *key){
         return NULL;
     
     int index = hash(key,t);
-    struct list_t *list= t->listas[index];
+    struct list_t *list= t->lists[index];
 
     struct entry_t *entry_real =list_get(list,key);
     struct entry_t *entry_copia = entry_duplicate(entry_real);
@@ -134,8 +134,8 @@ int table_size(struct table_t *t){
     int i=0;
     int count=0;
 
-    while(i<t->n_linhas){
-        struct list_t * list = t->listas[i];
+    while(i<t->size){
+        struct list_t * list = t->lists[i];
         if(list==NULL)
             return -1;
         
@@ -171,8 +171,8 @@ char **table_get_keys(struct table_t *t){
     int j = 0; 
 
 
-    for (int i = 0; i < t->n_linhas; i++) {
-        struct list_t *list = t->listas[i];
+    for (int i = 0; i < t->size; i++) {
+        struct list_t *list = t->lists[i];
 
         char **keys_array_lista = list_get_keys(list);
         if (keys_array_lista != NULL) {
@@ -222,7 +222,7 @@ int table_remove(struct table_t *t, char *key){
 
     int value =hash(key,t);
 
-    struct list_t *lista= t->listas[value];
+    struct list_t *lista= t->lists[value];
     
     return list_remove(lista,key);
 
@@ -234,12 +234,12 @@ int table_remove(struct table_t *t, char *key){
  */
 int table_destroy(struct table_t *t){
 
-    if(t==NULL || t->listas<0|| t->listas==NULL)
+    if(t==NULL || t->lists<0|| t->lists==NULL)
         return -1;
     
-    for(int i =0; i<t->n_linhas; i++){
+    for(int i =0; i<t->size; i++){
 
-        struct list_t * lista =t->listas[i];
+        struct list_t * lista =t->lists[i];
         list_destroy(lista);
     }
 

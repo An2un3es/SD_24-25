@@ -4,13 +4,14 @@
 #include "entry.h"
 
 struct node_t {
-    struct entry_t *entry;
-	struct node_t* prox;
+	struct entry_t *entry;
+	struct node_t  *next; 
 };
 
 struct list_t {
-    struct node_t *head;
-    int size;
+	int size;
+	struct node_t *head;
 };
+
 
 #endif

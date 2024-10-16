@@ -4,7 +4,7 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/Users/rodrigoantunes/Main/FACULDADE/3º/1ºSEMESTRE´/SD/FINAL/PROJETO/SD_24:25/sd2425_projeto1_headers_v1/include"
+                "/Users/rodrigoantunes/Main/FACULDADE/3º/1ºSEMESTRE´/SD/FINAL/PROJETO/SD_24-25/SD-23/include"
             ],
             "defines": [],
             "macFrameworkPath": [

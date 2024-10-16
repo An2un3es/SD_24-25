@@ -14,13 +14,13 @@ Carolina Romeira - 59867
 
 
 
-int hash (char *key, struct table_t *t){
+int hash_code(char *key, int n){
 
     int size= strlen(key);
     int total = 0;
     for(int i =0; i<size;i++){
         total+= key[i];
-        total= total % t->size;
+        total= total % n;
     }
 
     return total;
@@ -66,7 +66,7 @@ int table_put(struct table_t *t, char *key, struct block_t *value){
     if (t == NULL || value == NULL || key == NULL)
         return -1;
 
-    int index = hash(key, t);
+    int index = hash_code(key, t->size);
     struct list_t *list = t->lists[index];
 
     if (list == NULL)
@@ -111,7 +111,7 @@ struct block_t *table_get(struct table_t *t, char *key){
     if (t==NULL || key ==NULL)
         return NULL;
     
-    int index = hash(key,t);
+    int index = hash_code(key,t->size);
     struct list_t *list= t->lists[index];
 
     struct entry_t *entry_real =list_get(list,key);
@@ -220,7 +220,7 @@ int table_remove(struct table_t *t, char *key){
     if(t==NULL || key ==NULL)
         return -1;
 
-    int value =hash(key,t);
+    int value =hash_code(key,t->size);
 
     struct list_t *lista= t->lists[value];
     

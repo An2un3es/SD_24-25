@@ -20,9 +20,6 @@
 */
 int network_connect(struct rtable_t *rtable){
 
-    if(rtable==NULL)
-        return -1;
-
     struct sockaddr_in server_addr;
     struct hostent *server;
 
@@ -66,6 +63,8 @@ int network_connect(struct rtable_t *rtable){
 * - Retornar a mensagem de-serializada ou NULL em caso de erro.
 */
 MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg){
+
+    
 
 
 }

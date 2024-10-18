@@ -102,9 +102,27 @@ int main(int argc, char **argv) {
         //----------------------------------------------
 
         } else if (strcmp(command, "getkeys") == 0) {
-            // Chamada para rtable_getkeys e processamento das keys recebidas
+
+            char ** keys=rtable_get_keys(rtable);
+
+            if (keys == NULL) {
+            printf("Array está vazio.\n");
+            }
+            printf("Keys da Tabela:\n");
+            for (int i = 0; keys[i] != NULL; i++) {
+                printf("-> %s\n", keys[i]);
+            }
         } else if (strcmp(command, "gettable") == 0) {
-            // Chamada para rtable_gettable e processamento da tabela
+
+            struct entry_t **entrys=rtable_get_table(rtable);
+            if (entrys == NULL) {
+            printf("Array está vazio.\n");
+            }
+            printf("Entries da Tabela:\n");
+            for (int i = 0; entrys[i] != NULL; i++) {
+                printf("Entry nº %d: Key->%s | Datasize-> %d\n", i,entrys[i]->key, entrys[i]->value->datasize);
+            }
+            
         } else if (strcmp(command, "quit") == 0) {
             break;
         } else {

@@ -12,9 +12,9 @@ int main(int argc, char **argv) {
     }
 
     // Inicializar a tabela remota (estrutura rtable_t)
-    struct rtable_t *rtable = rtable_bind(argv[1], atoi(argv[2]));
+    struct rtable_t *rtable = rtable_connect(str(argv[1]) + ":" + str(argv[2]));
     if (rtable == NULL) {
-        fprintf(stderr, "Erro ao conectar ao servidor.\n");
+        printf(stderr, "Erro ao conectar ao servidor.\n");
         return -1;
     }
 

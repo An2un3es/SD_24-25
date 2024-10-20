@@ -9,7 +9,7 @@
 #include "client_stub.h"
 #include "client_stub-private.h"
 #include "htmessages.pb-c.h"
-
+#define BUFFER_SIZE 1024 
 /* Esta função deve:
 * - Obter o endereço do servidor (struct sockaddr_in) com base na
 * informação guardada na estrutura rtable;
@@ -20,37 +20,26 @@
 */
 int network_connect(struct rtable_t *rtable){
 
-    struct sockaddr_in server_addr;
-    struct hostent *server;
+     struct sockaddr_in server = rtable -> server;
 
-    // Criar o socket TCP
-    if ((rtable->sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("Erro ao criar o socket");
-        return -1;
-    }
+  if ((rtable -> sockfd= socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    perror("Error creating TCP socket");
+    return -1;
+  }
 
-    if ((server = gethostbyname(rtable->server_address)) == NULL) {
-        perror("Erro ao resolver endereço do servidor");
-        close(rtable->sockfd);
-        return -1;
-    }
+  int reuse = 1;
+  //SOL_SOCKET e informar que e uma ligacao tcp
+  if (setsockopt(rtable -> sockfd, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse, sizeof(reuse)) < 0)
+    perror("setsockopt(SO_REUSEADDR) failed");
 
-    // Preencher a estrutura sockaddr_in
-    bzero((char *) &server_addr, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr, (char *)&server_addr.sin_addr.s_addr, server->h_length);
-    server_addr.sin_port = htons(rtable->server_port);
+  if (connect(rtable -> sockfd, (struct sockaddr*) &server, sizeof(server)) < 0) {
+    printf("Error connecting to the server\n");
+    close(rtable -> sockfd);
+    return -1;
+  }
+  printf("Connected\n");
 
-    // Estabelecer ligação ao servidor
-    if (connect(rtable->sockfd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
-        perror("Erro ao conectar ao servidor");
-        close(rtable->sockfd);
-        return -1;
-    }
-
-    // Ligação bem-sucedida
-    return 0;
-
+  return 0;
 }
 
 /* Esta função deve:
@@ -58,14 +47,52 @@ int network_connect(struct rtable_t *rtable){
 * - Serializar a mensagem contida em msg;
 * - Enviar a mensagem serializada para o servidor;
 * - Esperar a resposta do servidor;
-* - De-serializar a mensagem de resposta;
+* - De-serializar a mensagem de resposta;   
 * - Tratar de forma apropriada erros de comunicação;
 * - Retornar a mensagem de-serializada ou NULL em caso de erro.
 */
-MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg){
+MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg){ //trabalhamos com sistema sync!
+   //TODO rever o codigo
+ 
+ if (rtable == NULL || msg == NULL) {
+        printf(stderr, "Erro: %s é NULL.\n", rtable==NULL?rtable:msg); //Caso precisarmos pros testes  TODO remove
+        return NULL;
+    }
 
-    
+   // - Obter o descritor da ligação (socket) da estrutura rtable_t;
+    int socketfd = rtable->sockfd;
+    if (socketfd <= 0) {
+        printf(stderr, "Erro: descritor de socket inválido.\n"); //Caso precisarmos pros testes TODO remove
+        return NULL;
+    }
+    // - Serializar a mensagem contida em msg;
+    size_t msg_size = message_t__get_packed_size(msg);
+    uint8_t *msg_serialized = (uint8_t *)malloc(msg_size);
+    if (msg_serialized == NULL) {
+        printf(stderr, "Erro: falha ao alocar memória para a mensagem serializada.\n"); //Caso precisarmos pros testes TODO remove
+        return NULL;
+    }
+    message_t__pack(msg, msg_serialized);
+    // - Enviar a mensagem serializada para o servidor;
+    if (send(socketfd, msg_serialized, msg_size, 0) != msg_size) {
+        fprintf(stderr, "Erro ao enviar a mensagem ao servidor.\n");
+        free(msg_serialized);
+        return NULL;
+    }
+    free(msg_serialized);  // Liberar a memória da mensagem serializada
 
+    // - Esperar a resposta do servidor;
+    uint8_t buffer[BUFFER_SIZE];
+    ssize_t bytes_received = recv(socketfd, buffer, BUFFER_SIZE, 0);
+    if (bytes_received <= 0) {
+        fprintf(stderr, "Erro ao receber a resposta do servidor.\n");
+        return NULL;
+    }
+    //TODO o que seriam erros de comunicação a serem tratados?
+    // - De-serializar a mensagem de resposta;   
+    MessageT *response_msg = message_t__unpack(NULL, bytes_received, buffer);
+   
+    return response_msg== NULL?NULL: response_msg;
 
 }
 
@@ -74,22 +101,8 @@ MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg){
 */
 int network_close(struct rtable_t *rtable){
 
-    // Verificar se o descritor do socket é válido
-    if (rtable->sockfd < 0) {
-        fprintf(stderr, "Erro: Socket inválido.\n");
-        return -1;
-    }
-
-    // Fechar o socket
-    if (close(rtable->sockfd) < 0) {
-        perror("Erro ao fechar o socket");
-        return -1;
-    }
-
-    // Resetar o descritor do socket na rtable
-    rtable->sockfd = -1;
-
+  
     // Fecho bem-sucedido
-    return 0;
+    return close(rtable->sockfd);
 
 }

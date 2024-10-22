@@ -3,43 +3,35 @@
 #include "entry.h"
 #include "client_stub-private.h"
 #include "client_network.h"
-#include <bits/socket.h>
+
 
 /* Função para estabelecer uma associação entre o cliente e o servidor,
  * em que address_port é uma string no formato <hostname>:<port>.
  * Retorna a estrutura rtable preenchida, ou NULL em caso de erro.
  */
-struct rtable_t *rtable_connect(char *address_port)
-{
+struct rtable_t *rtable_connect(char *address_port){
+
+
     struct rtable_t *rtable = (struct rtable *)malloc(sizeof(struct rtable_t));
 
     if (rtable == NULL)
         return NULL;
 
     char *copy = strdup(address_port);
-    char *copy2 = copy;
     char *host = strtok(copy, ":");
     copy = strtok(NULL, ":");
     char *port = strtok(copy, ":");
 
-    // Preenche estrutura server com endereço do server:
-    rtable->server.sin_family = AF_INET; // família de endereços internet
-    rtable->server.sin_port = htons(atoi(port));
-    // Porta TCP
-    // SOL_SOCKET e informar que e uma ligacao tcp
-    if (inet_pton(AF_INET, host, &rtable->server.sin_addr) < 1)
-    { // Endereço IP
-        printf("Error IP converting\n");
-        free(copy2);
-        return NULL;
-    }
+    rtable->server_address=host;
+    rtable->server_port=atoi(&port);
 
-    free(copy2);
+
     if (network_connect(rtable) < 0)
     {
         free(rtable);
         return NULL;
     }
+
     return rtable;
 }
 
@@ -62,7 +54,8 @@ int rtable_disconnect(struct rtable_t *rtable)
     }
     // Resetar o descritor do socket na rtable
     rtable->sockfd = -1; //não sei quanto a necessidade disso
-    free(rtable->server);
+    free(rtable->server_address);
+    free(rtable->server_port);
     free(rtable);
     return 0;
 }

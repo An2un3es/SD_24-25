@@ -13,8 +13,6 @@ Falta a parte de criar a hashtable consoante o argumento <n_lists> antes de perm
 */
 
 
-
-
 int main(int argc, char **argv) {
 
     
@@ -25,9 +23,20 @@ int main(int argc, char **argv) {
 
     // Verifica se foi passado algum argumento
     if (argc != 3) {
-        printf("Uso: %s <server> <port> <n_lists> \n", argv[0]);
+        printf("Uso: %s <server>:<port> <n_lists> \n", argv[0]);
         return -1;
     }
+
+    //criar tabela com n_listas pedidas
+    int n_listas = atoi(argv[2]);
+    struct table_t *table =server_skeleton_init(n_listas);
+
+    if(table==NULL){
+        perror("Erro ao criar a tabela");
+        return -1;
+    }
+
+
 
     // Cria socket TCP
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {

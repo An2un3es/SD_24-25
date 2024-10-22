@@ -20,13 +20,16 @@
 */
 int network_connect(struct rtable_t *rtable){
 
+    int sockfd;
     struct sockaddr_in server;
 
     // Cria socket TCP
-    if ((rtable-> sockfd= socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((sockfd= socket(AF_INET, SOCK_STREAM, 0)) < 0) {
       perror("Error creating TCP socket");
       return -1;
     }
+
+    rtable->sockfd=sockfd;
 
     // Preenche a estrutura server
     server.sin_family = AF_INET;
@@ -47,7 +50,7 @@ int network_connect(struct rtable_t *rtable){
         return -1;
     }
 
-    return rtable-> sockfd;
+    return 0;
 
   /**
 

@@ -5,8 +5,9 @@
 #include "arpa/inet.h"
 struct rtable_t {
  
+  char *server_address;
+  int server_port;
   int sockfd;
-	struct sockaddr_in server;
 
 };
 

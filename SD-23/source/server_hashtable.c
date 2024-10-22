@@ -39,49 +39,23 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-
-    // Cria socket TCP
-    int sockfd, connsockfd;
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("Erro ao criar socket");
+    // Inicializar o servidor (criar socket de escuta)
+    int listening_socket = server_network_init(port);
+    if (listening_socket < 0) {
+        perror("Erro ao inicializar a rede do servidor");
         return -1;
     }
 
 
-    // Preenche estrutura server para bind
-    struct sockaddr_in server, client;
-    socklen_t size_client = sizeof(struct sockaddr_in);
-
-    server.sin_family = AF_INET;
-    server.sin_port = htons(port); // <port> é a porta TCP
-
-    // Converter e atribuir o endereço IP (server)
-    if (inet_pton(AF_INET, server_ip, &server.sin_addr) <= 0) {
-        perror("Erro ao converter o endereço IP");
+    // Entrar no loop principal para processar as conexões
+    if (network_main_loop(listening_socket, table) < 0) {
+        perror("Erro no loop de rede");
+        close(listening_socket);
         return -1;
     }
 
-    // Faz bind
-    if (bind(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0) {
-        perror("Erro ao fazer bind");
-        close(sockfd);
-        return -1;
-    }
+    // Fechar o socket ao sair (em caso de erro)
+    close(listening_socket);
 
-    // Faz listen
-    if (listen(sockfd, 5) < 0) {
-        perror("Erro ao executar listen");
-        close(sockfd);
-        return -1;
-    }
-
-    printf("Servidor à espera de conexões\n");
-
-    // Bloqueia à espera de pedidos de conexão
-    while ((connsockfd = accept(sockfd, (struct sockaddr *)&client, &size_client)) != -1) {
-        printf("Cliente conectado\n");
-
-
-
-    }
+    return 0;
 }

@@ -20,26 +20,52 @@
 */
 int network_connect(struct rtable_t *rtable){
 
-     struct sockaddr_in server = rtable -> server;
+    struct sockaddr_in server;
 
-  if ((rtable -> sockfd= socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("Error creating TCP socket");
-    return -1;
-  }
+    // Cria socket TCP
+    if ((rtable-> sockfd= socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+      perror("Error creating TCP socket");
+      return -1;
+    }
 
-  int reuse = 1;
-  //SOL_SOCKET e informar que e uma ligacao tcp
-  if (setsockopt(rtable -> sockfd, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse, sizeof(reuse)) < 0)
-    perror("setsockopt(SO_REUSEADDR) failed");
+    // Preenche a estrutura server
+    server.sin_family = AF_INET;
+    server.sin_port = htons(rtable->server_port);
 
-  if (connect(rtable -> sockfd, (struct sockaddr*) &server, sizeof(server)) < 0) {
-    printf("Error connecting to the server\n");
-    close(rtable -> sockfd);
-    return -1;
-  }
-  printf("Connected\n");
 
-  return 0;
+    // Converte o endereço IP
+    if (inet_pton(AF_INET, rtable->server_address, &server.sin_addr) < 1) {
+        printf("Erro ao converter IP\n");
+        close(rtable-> sockfd);
+        return -1;
+    }
+
+    // Estabelece a conexão
+    if (connect(rtable-> sockfd, (struct sockaddr *)&server, sizeof(server)) < 0) {
+        perror("Erro ao conectar-se ao servidor");
+        close(rtable-> sockfd);
+        return -1;
+    }
+
+    return rtable-> sockfd;
+
+  /**
+
+    int reuse = 1;
+    //SOL_SOCKET e informar que e uma ligacao tcp
+    if (setsockopt(rtable -> sockfd, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse, sizeof(reuse)) < 0)
+      perror("setsockopt(SO_REUSEADDR) failed");
+
+    if (connect(rtable -> sockfd, (struct sockaddr*) &server, sizeof(server)) < 0) {
+      printf("Error connecting to the server\n");
+      close(rtable -> sockfd);
+      return -1;
+    }
+    printf("Connected\n");
+
+    return 0;
+    */
+
 }
 
 /* Esta função deve:
@@ -101,7 +127,6 @@ MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg){ //trabal
 */
 int network_close(struct rtable_t *rtable){
 
-  
     // Fecho bem-sucedido
     return close(rtable->sockfd);
 

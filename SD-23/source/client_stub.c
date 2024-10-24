@@ -323,7 +323,64 @@ void rtable_free_keys(char **keys){
 /* Retorna um array de entry_t* com todo o conteúdo da tabela, colocando
  * um último elemento do array a NULL. Retorna NULL em caso de erro.
  */
-struct entry_t **rtable_get_table(struct rtable_t *rtable); // N esqeucer de chamar o client_network.send_receive
+struct entry_t **rtable_get_table(struct rtable_t *rtable){
+
+    MessageT msg;
+    message_t__init(&msg);
+    msg.opcode=MESSAGE_T__OPCODE__OP_GETTABLE;
+    msg.c_type=MESSAGE_T__C_TYPE__CT_NONE;
+
+    MessageT *response = network_send_receive(rtable, &msg);
+    if (response == NULL) {
+        printf("Erro ao enviar/receber mensagem");
+        return NULL;
+    }
+
+    // Verificar se a mensagem de resposta é uma mensagem de erro
+    if (response->opcode == MESSAGE_T__OPCODE__OP_ERROR && response->c_type == MESSAGE_T__C_TYPE__CT_NONE) {
+        printf("Mensagem de ERRO recebida\n");
+        message_t__free_unpacked(response, NULL);
+        return NULL;
+    }
+
+    // Verificar se veio a resposta esperada
+    if (response->opcode != MESSAGE_T__OPCODE__OP_GETTABLE + 1 || response->c_type != MESSAGE_T__C_TYPE__CT_TABLE) {
+        printf("Resposta do servidor não foi a esperada\n");
+        message_t__free_unpacked(response, NULL);
+        return NULL;
+    }
+
+    // Alocar memória para a cópia das chaves
+    struct entry_t **entries = malloc((response->n_entries) * sizeof(struct entry_t *));
+    if (entries == NULL) {
+        printf("Erro ao alocar memória para as entries\n");
+        message_t__free_unpacked(response, NULL);
+        return NULL;
+    }
+
+    // Copiar as entries da resposta
+    for (size_t i = 0; i < response->n_entries; i++) {
+        entries[i] = entry_duplicate(response->entries[i]);
+        if (entries[i] == NULL) {
+            printf("Erro ao duplicar a entry\n");
+
+            for (size_t j = 0; j < i; j++) {
+                entry_destroy(entries[j]);  
+            }
+            free(entries);
+            message_t__free_unpacked(response, NULL);
+            return NULL;
+    }
+    
+    entries[response->n_entries] = NULL;  // Colocar o último elemento a NULL
+
+
+    // Libertar a memória da resposta
+    message_t__free_unpacked(response, NULL);
+
+    return entries;
+
+}
 
 /* Liberta a memória alocada por rtable_get_table().
  */

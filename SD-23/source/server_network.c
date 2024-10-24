@@ -108,10 +108,25 @@ int network_main_loop(int listening_socket, struct table_t *table){
 */
 MessageT *network_receive(int client_socket){
 
+    uint8_t buffer[1024];  // Buffer grande o suficiente
+    int recv_size;
 
+    // Ler os dados do socket
+    recv_size = recv(client_socket, buffer, sizeof(buffer), 0);
+    if (recv_size <= 0) {
+        perror("Erro ao receber dados");
+        return NULL;
+    }
 
+    // Deserializar a mensagem recebida usando Protocol Buffers
+    MessageT *message = message_t__unpack(NULL, recv_size, buffer);
+    if (message == NULL) {
+        fprintf(stderr, "Erro ao de-serializar a mensagem\n");
+        return NULL;
+    }
 
-
+    return message;
+    
 }
 
 /* A função network_send() deve:
@@ -119,7 +134,10 @@ MessageT *network_receive(int client_socket){
 * - Enviar a mensagem serializada, através do client_socket.
 * Retorna 0 (OK) ou -1 em caso de erro.
 */
-int network_send(int client_socket, MessageT *msg);
+int network_send(int client_socket, MessageT *msg){
+
+
+}
 
 /* Liberta os recursos alocados por server_network_init(), nomeadamente
 * fechando o socket passado como argumento.

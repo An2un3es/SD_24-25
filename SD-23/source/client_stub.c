@@ -158,7 +158,37 @@ struct block_t *rtable_get(struct rtable_t *rtable, char *key){
  * toda a memoria alocada na respetiva operação rtable_put().
  * Retorna 0 (OK), ou -1 (chave não encontrada ou erro).
  */
-int rtable_del(struct rtable_t *rtable, char *key); // N esqeucer de chamar o client_network.send_receive
+int rtable_del(struct rtable_t *rtable, char *key){
+
+    if (key == NULL) {
+        printf("Chave inválida\n");
+        return -1;
+    }
+
+    MessageT msg;
+    message_t__init(&msg);
+    msg.opcode=MESSAGE_T__OPCODE__OP_DEL;
+    msg.c_type=MESSAGE_T__C_TYPE__CT_KEY;
+    msg.key = key;
+
+    MessageT *response = network_send_receive(rtable, &msg);
+    if (response == NULL) {
+        printf("Erro ao enviar/receber mensagem");
+        return -1;
+    }
+
+    if (response->opcode != MESSAGE_T__OPCODE__OP_DEL + 1 || response->c_type != MESSAGE_T__C_TYPE__CT_NONE) {
+    printf("Erro na resposta do servidor\n");
+    message_t__free_unpacked(response, NULL);
+    return -1;
+}
+
+    // Libertar a memória da resposta
+    message_t__free_unpacked(response, NULL);
+
+    return 0;
+
+}
 
 /* Retorna o número de elementos contidos na tabela ou -1 em caso de erro.
  */

@@ -16,8 +16,10 @@ ficheiros da fase 2 do Projeto:
 
 client_hashtable - Feito
 client_stub - Incompleto ()
-client_network - Feito
+client_network - Feito (Mas é preciso rever o network_send_receive)
 server_hashtable - Feito
 server_network - Feito
 server_skeleton - Incompleto (falta o invoke)
+
+Falta testar tudo
 

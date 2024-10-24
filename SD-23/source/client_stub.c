@@ -3,6 +3,7 @@
 #include "entry.h"
 #include "client_stub-private.h"
 #include "client_network.h"
+#include "htmessages.pb-c.h"
 
 
 /* Função para estabelecer uma associação entre o cliente e o servidor,
@@ -64,7 +65,41 @@ int rtable_disconnect(struct rtable_t *rtable)
  * Se a key já existe, vai substituir essa entrada pelos novos dados.
  * Retorna 0 (OK, em adição/substituição), ou -1 (erro).
  */
-int rtable_put(struct rtable_t *rtable, struct entry_t *entry); // N esqeucer de chamar o client_network.send_receive
+int rtable_put(struct rtable_t *rtable, struct entry_t *entry){
+
+    // Criar a mensagem a enviar
+    MessageT msg;
+    message_t__init(&msg);
+    msg.opcode=MESSAGE_T__OPCODE__OP_PUT;
+    msg.c_type=MESSAGE_T__C_TYPE__CT_ENTRY;
+
+    // Preencher a estrutura EntryT dentro da mensagem
+    EntryT msg_entry;
+    entry_t__init(&msg_entry);
+    msg_entry.key = entry->key;
+    msg_entry.value.len = entry->value->datasize;
+    msg_entry.value.data = (uint8_t *) entry->value->data;
+
+    // Atribuir a EntryT à mensagem
+    msg.entry = &msg_entry;
+
+    // Enviar a mensagem e receber a resposta
+    MessageT *response = network_send_receive(rtable, &msg);
+    if (response == NULL) {
+        printf("Erro ao enviar/receber mensagem");
+        return -1;  
+    }
+
+    // Verificar se a resposta está bem
+    int result = (response->opcode == MESSAGE_T__OPCODE__OP_PUT +1 && response->c_type == MESSAGE_T__C_TYPE__CT_NONE) ? 0 : -1;
+
+    // Libertar a memória da resposta
+    message_t__free_unpacked(response, NULL);
+
+    return result;
+
+
+} // N esqeucer de chamar o client_network.send_receive
 
 /* Retorna a entrada da tabela com chave key, ou NULL caso não exista
  * ou se ocorrer algum erro.

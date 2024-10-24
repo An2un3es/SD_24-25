@@ -9,6 +9,8 @@
 #include "client_stub.h"
 #include "client_stub-private.h"
 #include "htmessages.pb-c.h"
+
+
 #define BUFFER_SIZE 1024 
 /* Esta função deve:
 * - Obter o endereço do servidor (struct sockaddr_in) com base na

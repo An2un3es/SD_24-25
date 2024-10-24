@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "htmessages.pb-c.h"
+#include "server_network.h"
 
 
 /*
@@ -63,7 +64,7 @@ int main(int argc, char **argv) {
     }
 
     // Fechar o socket ao sair (em caso de erro)
-    close(listening_socket);
+    server_network_close(listening_socket);
 
     return 0;
 }

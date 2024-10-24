@@ -14,6 +14,7 @@
 * Retorna o descritor do socket ou -1 em caso de erro.
 */
 int server_network_init(short port){
+
     int sockfd;
     struct sockaddr_in server;
 
@@ -57,7 +58,11 @@ na tabela table;
 * A função não deve retornar, a menos que ocorra algum erro. Nesse
 * caso retorna -1.
 */
-int network_main_loop(int listening_socket, struct table_t *table);
+int network_main_loop(int listening_socket, struct table_t *table){
+
+
+
+}
 
 /* A função network_receive() deve:
 * - Ler os bytes da rede, a partir do client_socket indicado;
@@ -65,7 +70,15 @@ int network_main_loop(int listening_socket, struct table_t *table);
 * reservando a memória necessária para a estrutura MessageT.
 * Retorna a mensagem com o pedido ou NULL em caso de erro.
 */
-MessageT *network_receive(int client_socket);
+MessageT *network_receive(int client_socket){
+
+
+
+
+
+
+    
+}
 
 /* A função network_send() deve:
 * - Serializar a mensagem de resposta contida em msg;
@@ -78,5 +91,15 @@ int network_send(int client_socket, MessageT *msg);
 * fechando o socket passado como argumento.
 * Retorna 0 (OK) ou -1 em caso de erro.
 */
-int server_network_close(int socket);
+int server_network_close(int socket){
+
+    if(socket==NULL)
+        return -1; 
+
+    if(close(socket)<0)
+        return -1;
+
+    return 0;
+
+}
 

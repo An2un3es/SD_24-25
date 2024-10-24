@@ -258,7 +258,7 @@ int rtable_size(struct rtable_t *rtable){
  * colocando um último elemento do array a NULL.
  * Retorna NULL em caso de erro.
  */
-char **rtable_get_keys(struct rtable_t *rtable){
+char **rtable_get_keys(struct rtable_t *rtable){ 
 
     MessageT msg;
     message_t__init(&msg);
@@ -285,7 +285,7 @@ char **rtable_get_keys(struct rtable_t *rtable){
         return NULL;
     }
 
-    // Alocar memória para a cópia das chaves
+    // Alocar memória para a cópia das chaves (Verificar se não é preciso "+1")
     char **keys = malloc((response->n_keys) * sizeof(char *));
     if (keys == NULL) {
         printf("Erro ao alocar memória para as chaves\n");
@@ -296,6 +296,14 @@ char **rtable_get_keys(struct rtable_t *rtable){
     // Copiar as chaves da resposta
     for (size_t i = 0; i < response->n_keys; i++) {
         keys[i] = strdup(response->keys[i]);
+        if (keys[i] == NULL) {
+            printf("Erro ao duplicar a key\n");
+
+            rtable_free_keys(keys);
+            message_t__free_unpacked(response, NULL);
+            return NULL;
+        }
+
     }
     keys[response->n_keys] = NULL;  // Colocar o último elemento a NULL
 
@@ -350,7 +358,7 @@ struct entry_t **rtable_get_table(struct rtable_t *rtable){
         return NULL;
     }
 
-    // Alocar memória para a cópia das chaves
+    // Alocar memória para a cópia das chaves ((Verificar se não é preciso "+1"))
     struct entry_t **entries = malloc((response->n_entries) * sizeof(struct entry_t *));
     if (entries == NULL) {
         printf("Erro ao alocar memória para as entries\n");
@@ -364,14 +372,12 @@ struct entry_t **rtable_get_table(struct rtable_t *rtable){
         if (entries[i] == NULL) {
             printf("Erro ao duplicar a entry\n");
 
-            for (size_t j = 0; j < i; j++) {
-                entry_destroy(entries[j]);  
-            }
-            free(entries);
+            rtable_free_entries(entries);
             message_t__free_unpacked(response, NULL);
             return NULL;
+        }
     }
-    
+
     entries[response->n_entries] = NULL;  // Colocar o último elemento a NULL
 
 
@@ -379,9 +385,19 @@ struct entry_t **rtable_get_table(struct rtable_t *rtable){
     message_t__free_unpacked(response, NULL);
 
     return entries;
-
+    
 }
 
 /* Liberta a memória alocada por rtable_get_table().
  */
-void rtable_free_entries(struct entry_t **entries); // N esqeucer de chamar o client_network.send_receive
+void rtable_free_entries(struct entry_t **entries){
+
+    if(entries ==NULL)
+        return;
+
+    for (int i = 0; entries[i] != NULL; i++) {
+        entry_destroy(entries[i]);
+    }
+    
+    free(entries);
+}

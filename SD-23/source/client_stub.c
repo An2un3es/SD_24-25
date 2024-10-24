@@ -258,7 +258,53 @@ int rtable_size(struct rtable_t *rtable){
  * colocando um último elemento do array a NULL.
  * Retorna NULL em caso de erro.
  */
-char **rtable_get_keys(struct rtable_t *rtable); // N esqeucer de chamar o client_network.send_receive
+char **rtable_get_keys(struct rtable_t *rtable){
+
+    MessageT msg;
+    message_t__init(&msg);
+    msg.opcode=MESSAGE_T__OPCODE__OP_GETKEYS;
+    msg.c_type=MESSAGE_T__C_TYPE__CT_NONE;
+
+    MessageT *response = network_send_receive(rtable, &msg);
+    if (response == NULL) {
+        printf("Erro ao enviar/receber mensagem");
+        return NULL;
+    }
+
+    // Verificar se a mensagem de resposta é uma mensagem de erro
+    if (response->opcode == MESSAGE_T__OPCODE__OP_ERROR && response->c_type == MESSAGE_T__C_TYPE__CT_NONE) {
+        printf("Mensagem de ERRO recebida\n");
+        message_t__free_unpacked(response, NULL);
+        return NULL;
+    }
+
+    // Verificar se veio a resposta esperada
+    if (response->opcode != MESSAGE_T__OPCODE__OP_GETKEYS + 1 || response->c_type != MESSAGE_T__C_TYPE__CT_KEYS) {
+        printf("Resposta do servidor não foi a esperada\n");
+        message_t__free_unpacked(response, NULL);
+        return NULL;
+    }
+
+    // Alocar memória para a cópia das chaves
+    char **keys = malloc((response->n_keys) * sizeof(char *));
+    if (keys == NULL) {
+        printf("Erro ao alocar memória para as chaves\n");
+        message_t__free_unpacked(response, NULL);
+        return NULL;
+    }
+
+    // Copiar as chaves da resposta
+    for (size_t i = 0; i < response->n_keys; i++) {
+        keys[i] = strdup(response->keys[i]);
+    }
+    keys[response->n_keys] = NULL;  // Colocar o último elemento a NULL
+
+
+    // Libertar a memória da resposta
+    message_t__free_unpacked(response, NULL);
+
+    return keys;
+}
 
 /* Liberta a memória alocada por rtable_get_keys().
  */

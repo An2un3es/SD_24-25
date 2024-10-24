@@ -60,7 +60,43 @@ na tabela table;
 */
 int network_main_loop(int listening_socket, struct table_t *table){
 
+    struct sockaddr_in client;
+    socklen_t client_len = sizeof(client);
+    int client_socket;
 
+    // Aceitar a conexão de um cliente
+    while ((client_socket = accept(listening_socket, (struct sockaddr *)&client, &client_len)) > 0) {
+        printf("Cliente conectado.\n");
+
+        // Receber a mensagem do cliente
+
+        MessageT *request_msg = network_receive(client_socket);
+
+        if (request_msg == NULL) {
+            printf("Erro ao receber a mensagem do cliente.\n");
+            close(client_socket);
+            continue;
+        }
+
+        // Processar a mensagem no skeleton
+        MessageT *response_msg = invoke(request_msg, table);
+        if (response_msg == NULL) {
+            printf("Erro ao processar a mensagem.\n");
+            close(client_socket);
+            continue;
+        }
+
+        // Enviar a resposta de volta ao cliente
+        if (network_send(client_socket, response_msg) < 0) {
+            printf("Erro ao enviar a resposta para o cliente.\n");
+        }
+
+        // Limpar e fechar a conexão
+        message_t__free_unpacked(request_msg, NULL);
+        close(client_socket);
+    }
+
+    return -1;
 
 }
 
@@ -76,8 +112,6 @@ MessageT *network_receive(int client_socket){
 
 
 
-
-    
 }
 
 /* A função network_send() deve:

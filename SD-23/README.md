@@ -14,7 +14,7 @@ server_netiwork -> server_skeleton -> server_hashtable ------> client_hashtable 
 
 ficheiros da fase 2 do Projeto:
 
-client_hashtable - Incompleto (é preciso emendar a parte dos argvs)
+client_hashtable - Feito
 client_stub - Incompleto ()
 client_network - Feito
 server_hashtable - Feito

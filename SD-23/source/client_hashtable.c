@@ -6,13 +6,25 @@
 
 int main(int argc, char **argv) {
 
-    if (argc != 3) {
-        printf("Uso: %s <server>:<port>\n", argv[0]);
+    if (argc != 2) {
+        printf("Erro ao iniciar o cliente\n");
+        printf("Exemplo de uso: %s <server>:<port> \n", argv[0]);
         return -1;
     }
 
+    // Extrair <server> e <port> do argv[1]
+    char *server_and_port = argv[1];
+    char *server_ip = strtok(server_and_port, ":");
+    char *port_str = strtok(NULL, ":");
+
+    if (server_ip == NULL || port_str == NULL) {
+            fprintf(stderr, "Erro: O formato esperado é <server>:<port>\n");
+            return -1;
+        }
+
+
     // Inicializar a tabela remota (estrutura rtable_t)
-    struct rtable_t *rtable = rtable_connect(str(argv[1]) + ":" + str(argv[2]));
+    struct rtable_t *rtable = rtable_connect(server_and_port);
     if (rtable == NULL) {
         printf(stderr, "Erro ao conectar ao servidor.\n");
         return -1;

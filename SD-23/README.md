@@ -15,7 +15,7 @@ server_netiwork -> server_skeleton -> server_hashtable ------> client_hashtable 
 ficheiros da fase 2 do Projeto:
 
 client_hashtable - Feito
-client_stub - Incompleto (rtable_free_keys|rtable_get_table|rtable_free_entries)
+client_stub - Feito
 client_network - Feito (Mas é preciso rever o network_send_receive)
 server_hashtable - Feito
 server_network - Feito

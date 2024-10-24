@@ -32,6 +32,42 @@ int server_skeleton_destroy(struct table_t *table){
 
 /* Executa na tabela table a operação indicada pelo opcode contido em msg
 * e utiliza a mesma estrutura MessageT para devolver o resultado. * Retorna 0 (OK) ou -1 em caso de erro. */ 
-int invoke(MessageT *msg, struct table_t *table);
+int invoke(MessageT *msg, struct table_t *table){
+
+    if (msg==NULL || table==NULL)
+        return -1;
+    
+    switch (msg->opcode)
+    {
+        case MESSAGE_T__OPCODE__OP_PUT:
+
+            if(msg->c_type!=MESSAGE_T__C_TYPE__CT_ENTRY)
+                return -1;
+            
+            int i = entry_t__get_packed_size(msg->entry);
+            struct block_t *block=block_create(i,msg->entry->value);
+
+            if(table_put(table,msg->entry->key,block)<-1){
+                return -1;
+            }
+                
+
+        
+
+        case MESSAGE_T__OPCODE__OP_GET:
+
+
+
+
+
+
+
+    }
+
+
+    return 0;
+
+
+}
 
 

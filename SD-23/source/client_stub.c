@@ -97,6 +97,7 @@ int rtable_put(struct rtable_t *rtable, struct entry_t *entry){
         return -1;
     }
 
+    // Verificar se veio a resposta esperada
     if (response->opcode != MESSAGE_T__OPCODE__OP_PUT + 1 || response->c_type != MESSAGE_T__C_TYPE__CT_NONE) {
         printf("Resposta do servidor não foi a esperada\n");
         message_t__free_unpacked(response, NULL);
@@ -137,7 +138,7 @@ struct block_t *rtable_get(struct rtable_t *rtable, char *key){
     }
 
 
-    // Verificar se a resposta é válida
+    // Verificar se veio a resposta esperada
     if (response->opcode != MESSAGE_T__OPCODE__OP_GET+1 || response->c_type != MESSAGE_T__C_TYPE__CT_VALUE) {
         printf("Resposta do servidor não foi a esperada\n");
         message_t__free_unpacked(response, NULL);
@@ -201,6 +202,7 @@ int rtable_del(struct rtable_t *rtable, char *key){
         return -1;
     }
 
+    // Verificar se veio a resposta esperada
     if (response->opcode != MESSAGE_T__OPCODE__OP_DEL + 1 || response->c_type != MESSAGE_T__C_TYPE__CT_NONE) {
         printf("Resposta do servidor não foi a esperada\n");
         message_t__free_unpacked(response, NULL);
@@ -216,7 +218,41 @@ int rtable_del(struct rtable_t *rtable, char *key){
 
 /* Retorna o número de elementos contidos na tabela ou -1 em caso de erro.
  */
-int rtable_size(struct rtable_t *rtable); // N esqeucer de chamar o client_network.send_receive
+int rtable_size(struct rtable_t *rtable){
+
+    MessageT msg;
+    message_t__init(&msg);
+    msg.opcode=MESSAGE_T__OPCODE__OP_SIZE;
+    msg.c_type=MESSAGE_T__C_TYPE__CT_NONE;
+
+    MessageT *response = network_send_receive(rtable, &msg);
+    if (response == NULL) {
+        printf("Erro ao enviar/receber mensagem");
+        return -1;
+    }
+
+    // Verificar se a mensagem de resposta é uma mensagem de erro
+    if (response->opcode == MESSAGE_T__OPCODE__OP_ERROR && response->c_type == MESSAGE_T__C_TYPE__CT_NONE) {
+        printf("Mensagem de ERRO recebida\n");
+        message_t__free_unpacked(response, NULL);
+        return -1;
+    }
+
+    // Verificar se veio a resposta esperada
+    if (response->opcode != MESSAGE_T__OPCODE__OP_SIZE + 1 || response->c_type != MESSAGE_T__C_TYPE__CT_RESULT) {
+        printf("Resposta do servidor não foi a esperada\n");
+        message_t__free_unpacked(response, NULL);
+        return -1;
+    }
+
+    int size = response->result;
+
+    // Libertar a memória da resposta
+    message_t__free_unpacked(response, NULL);
+
+    return size;
+
+}
 
 /* Retorna um array de char* com a cópia de todas as keys da tabela,
  * colocando um último elemento do array a NULL.

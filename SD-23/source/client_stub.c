@@ -308,7 +308,17 @@ char **rtable_get_keys(struct rtable_t *rtable){
 
 /* Liberta a memória alocada por rtable_get_keys().
  */
-void rtable_free_keys(char **keys); // N esqeucer de chamar o client_network.send_receive
+void rtable_free_keys(char **keys){
+
+    if(keys ==NULL)
+        return;
+
+    for (int i = 0; keys[i] != NULL; i++) {
+        free(keys[i]);
+    }
+    
+    free(keys);
+}
 
 /* Retorna um array de entry_t* com todo o conteúdo da tabela, colocando
  * um último elemento do array a NULL. Retorna NULL em caso de erro.

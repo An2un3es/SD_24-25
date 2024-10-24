@@ -99,12 +99,60 @@ int rtable_put(struct rtable_t *rtable, struct entry_t *entry){
     return result;
 
 
-} // N esqeucer de chamar o client_network.send_receive
+}
 
 /* Retorna a entrada da tabela com chave key, ou NULL caso não exista
  * ou se ocorrer algum erro.
  */
-struct block_t *rtable_get(struct rtable_t *rtable, char *key); // N esqeucer de chamar o client_network.send_receive
+struct block_t *rtable_get(struct rtable_t *rtable, char *key){
+
+    MessageT msg;
+    message_t__init(&msg);
+    msg.opcode=MESSAGE_T__OPCODE__OP_GET;
+    msg.c_type=MESSAGE_T__C_TYPE__CT_KEY;
+
+    msg.key = key;
+
+    MessageT *response = network_send_receive(rtable, &msg);
+    if (response == NULL) {
+        printf("Erro ao enviar/receber mensagem");
+        return -1;  
+    }
+
+
+    // Verificar se a resposta é válida
+    if (response->opcode != MESSAGE_T__OPCODE__OP_GET+1 || response->c_type != MESSAGE_T__C_TYPE__CT_VALUE) {
+        printf("Erro na resposta do servidor\n");
+        message_t__free_unpacked(response, NULL);
+        return NULL;
+    }
+
+    // Alocar memória para os dados antes de block_create
+    void *data = malloc(response->value.len);
+    if (data == NULL) {
+        perror("Erro ao alocar memória para os dados");
+        message_t__free_unpacked(response, NULL);
+        return NULL;
+    }
+
+    // Criar o block_t
+    struct block_t *result_block = block_create(response->value.len, data);
+    if (result_block == NULL) {
+        perror("Erro ao criar block_t");
+        block_destroy(result_block);
+        message_t__free_unpacked(response, NULL);
+        return NULL;
+    }
+
+    // Copiar os dados recebidos para o block_t
+    memcpy(result_block->data, response->value.data, response->value.len);
+
+    // Libertar a memória da resposta
+    message_t__free_unpacked(response, NULL);
+
+    return result_block;
+
+}
 
 /* Função para remover um elemento da tabela. Vai libertar
  * toda a memoria alocada na respetiva operação rtable_put().

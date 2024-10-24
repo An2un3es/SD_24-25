@@ -52,23 +52,6 @@ int network_connect(struct rtable_t *rtable){
 
     return 0;
 
-  /**
-
-    int reuse = 1;
-    //SOL_SOCKET e informar que e uma ligacao tcp
-    if (setsockopt(rtable -> sockfd, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse, sizeof(reuse)) < 0)
-      perror("setsockopt(SO_REUSEADDR) failed");
-
-    if (connect(rtable -> sockfd, (struct sockaddr*) &server, sizeof(server)) < 0) {
-      printf("Error connecting to the server\n");
-      close(rtable -> sockfd);
-      return -1;
-    }
-    printf("Connected\n");
-
-    return 0;
-    */
-
 }
 
 /* Esta função deve:

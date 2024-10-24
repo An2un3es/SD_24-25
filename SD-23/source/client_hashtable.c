@@ -7,7 +7,7 @@
 int main(int argc, char **argv) {
 
     if (argc != 3) {
-        printf("Uso: %s <server> <port>\n", argv[0]);
+        printf("Uso: %s <server>:<port>\n", argv[0]);
         return -1;
     }
 
@@ -131,6 +131,6 @@ int main(int argc, char **argv) {
     }
 
     // Fechar a conexão com o servidor
-    rtable_unbind(rtable);
+    rtable_disconnect(rtable);
     return 0;
 }

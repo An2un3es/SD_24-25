@@ -136,6 +136,26 @@ MessageT *network_receive(int client_socket){
 */
 int network_send(int client_socket, MessageT *msg){
 
+     // Serializar a mensagem usando Protocol Buffers
+    int size = message_t__get_packed_size(msg);
+    uint8_t *buffer = malloc(size);
+
+    if (buffer == NULL) {
+        perror("Erro de alocação de memória");
+        return -1;
+    }
+
+    message_t__pack(msg, buffer);
+
+    // Enviar a mensagem serializada
+    if (send(client_socket, buffer, size, 0) < 0) {
+        perror("Erro ao enviar dados");
+        free(buffer);
+        return -1;
+    }
+
+    free(buffer);
+    return 0;
 
 }
 

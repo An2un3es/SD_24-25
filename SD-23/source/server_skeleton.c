@@ -34,40 +34,143 @@ int server_skeleton_destroy(struct table_t *table){
 * e utiliza a mesma estrutura MessageT para devolver o resultado. * Retorna 0 (OK) ou -1 em caso de erro. */ 
 int invoke(MessageT *msg, struct table_t *table){
 
-    if (msg==NULL || table==NULL)
+    if (msg==NULL || table==NULL){
         return -1;
+    }
     
     switch (msg->opcode)
     {
         case MESSAGE_T__OPCODE__OP_PUT:
 
-            if(msg->c_type!=MESSAGE_T__C_TYPE__CT_ENTRY)
-                return -1;
-            
-            int i = entry_t__get_packed_size(msg->entry);
-            struct block_t *block=block_create(i,msg->entry->value);
-
-            if(table_put(table,msg->entry->key,block)<-1){
+            if (msg->c_type != MESSAGE_T__C_TYPE__CT_ENTRY) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                 return -1;
             }
-                
+            
+            // Criar uma nova entrada com key e value
+            struct block_t *block = block_create(msg->entry->value.len, msg->entry->value.data);
+            
+            if (block == NULL) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                return -1;
+            }
 
+            // Executa a operação PUT na tabela
+            int result = table_put(table, msg->entry->key ,block);
+
+            // Define a resposta com base no resultado
+            if (result == 0) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_PUT + 1;  
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+            } else {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;  
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+            }
+
+            // Limpa a memória temporária
+            block_destroy(block);
+
+            break;
         
-
         case MESSAGE_T__OPCODE__OP_GET:
 
+            if (msg->c_type != MESSAGE_T__C_TYPE__CT_KEY) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                return -1;
+            }
+
+            // Executa a operação Get na tabela
+            struct block_t *block = table_get(table, msg->key);
+
+            if (block == NULL) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+            }else {
+
+                msg->opcode = MESSAGE_T__OPCODE__OP_GET + 1;  
+                msg->c_type = MESSAGE_T__C_TYPE__CT_VALUE;
+                msg->value.len = block->datasize;
+                msg->value.data = block->data;
+            }
+
+            break;
+
+        case MESSAGE_T__OPCODE__OP_DEL:
+
+            if (msg->c_type != MESSAGE_T__C_TYPE__CT_KEY) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                return -1;
+            }
+
+            // Executa a operação Get na tabela
+            int result = table_remove(table, msg->key);
+
+            if (result == 0) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_DEL + 1;  
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+            } else {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;  
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+            }
 
 
+            break;
+        case MESSAGE_T__OPCODE__OP_SIZE:
 
+            if (msg->c_type != MESSAGE_T__C_TYPE__CT_NONE) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                return -1;
+            }
 
+            // Executa a operação Get na tabela
+            int result = table_size(table);
 
+            if (result < 0) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;  
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+            } else {
+                msg->opcode = MESSAGE_T__OPCODE__OP_SIZE + 1;  
+                msg->c_type = MESSAGE_T__C_TYPE__CT_RESULT;
+                msg->result=result;
+            }
+            break;
 
+        case MESSAGE_T__OPCODE__OP_GETKEYS:
+
+            if (msg->c_type != MESSAGE_T__C_TYPE__CT_NONE) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                return -1;
+            }
+
+            // Executa a operação Get na tabela
+            char **keys = table_get_keys(table);
+
+            if (keys ==NULL) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;  
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+            } else {
+                msg->opcode = MESSAGE_T__OPCODE__OP_GETKEYS + 1;  
+                msg->c_type = MESSAGE_T__C_TYPE__CT_KEYS;
+                msg->keys=keys;
+            }
+
+            break;
+        case MESSAGE_T__OPCODE__OP_GETTABLE:
+
+            break;
+        default:
+
+            return -1;
     }
 
 
-    return 0;
+    return 0; 
 
 
 }
-
-

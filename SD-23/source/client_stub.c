@@ -112,9 +112,9 @@ int rtable_put(struct rtable_t *rtable, struct entry_t *entry){
 
 }
 
-/* Retorna a entrada da tabela com chave key, ou NULL caso não exista
- * ou se ocorrer algum erro.
- */
+/* Retorna o bloco da entrada da tabela com chave key, ou NULL caso não exista
+* ou se ocorrer algum erro.
+*/
 struct block_t *rtable_get(struct rtable_t *rtable, char *key){
 
     MessageT msg;

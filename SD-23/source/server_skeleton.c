@@ -6,6 +6,12 @@
 #include "list.h"
 #include "list-private.h"
 #include "htmessages.pb-c.h"
+#include "block.h"
+
+
+EntryT *convert_to_entry_t(struct entry_t *entry);
+
+struct entry_t **list_get_entries(struct list_t *list);
 
 /* Inicia o skeleton da tabela. 
 * O main() do servidor deve chamar esta função antes de poder usar a * função invoke(). O parâmetro n_lists define o número de listas a
@@ -13,7 +19,7 @@
 * Retorna a tabela criada ou NULL em caso de erro. */ 
 struct table_t *server_skeleton_init(int n_lists){
 
-    if(n_lists==NULL || n_lists<=0)
+    if(n_lists<=0)
         return NULL;
 
     struct table_t *table =table_create(n_lists);
@@ -53,20 +59,20 @@ int invoke(MessageT *msg, struct table_t *table){
                 return -1;
             }
             
-            // Criar uma nova entrada com key e value
-            struct block_t *block = block_create(msg->entry->value.len, msg->entry->value.data);
+            // Criar um novo block com key e value
+            struct block_t *new_block = block_create(msg->entry->value.len, msg->entry->value.data);
             
-            if (block == NULL) {
+            if (new_block == NULL) {
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                 return -1;
             }
 
             // Executa a operação PUT na tabela
-            int result = table_put(table, msg->entry->key ,block);
+            int result1 = table_put(table, msg->entry->key ,new_block);
 
             // Define a resposta com base no resultado
-            if (result == 0) {
+            if (result1 == 0) {
                 msg->opcode = MESSAGE_T__OPCODE__OP_PUT + 1;  
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
             } else {
@@ -75,7 +81,7 @@ int invoke(MessageT *msg, struct table_t *table){
             }
 
             // Limpa a memória temporária
-            block_destroy(block);
+            block_destroy(new_block);
 
             break;
         
@@ -111,10 +117,10 @@ int invoke(MessageT *msg, struct table_t *table){
                 return -1;
             }
 
-            // Executa a operação Get na tabela
-            int result = table_remove(table, msg->key);
+            // Executa a operação Del na tabela
+            int result2 = table_remove(table, msg->key);
 
-            if (result == 0) {
+            if (result2 == 0) {
                 msg->opcode = MESSAGE_T__OPCODE__OP_DEL + 1;  
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
             } else {
@@ -132,16 +138,16 @@ int invoke(MessageT *msg, struct table_t *table){
                 return -1;
             }
 
-            // Executa a operação Get na tabela
-            int result = table_size(table);
+            // Executa a operação Size na tabela
+            int result3 = table_size(table);
 
-            if (result < 0) {
+            if (result3 < 0) {
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;  
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
             } else {
                 msg->opcode = MESSAGE_T__OPCODE__OP_SIZE + 1;  
                 msg->c_type = MESSAGE_T__C_TYPE__CT_RESULT;
-                msg->result=result;
+                msg->result=result3;
             }
             break;
 
@@ -153,7 +159,7 @@ int invoke(MessageT *msg, struct table_t *table){
                 return -1;
             }
 
-            // Executa a operação Get na tabela
+            // Executa a operação GetKeys na tabela
             char **keys = table_get_keys(table);
 
             if (keys ==NULL) {
@@ -182,7 +188,7 @@ int invoke(MessageT *msg, struct table_t *table){
                 i++;
             }
 
-            struct entry_t **all_entries = malloc((total_entries + 1) * sizeof(struct entry_t *));
+            EntryT **all_entries = malloc((total_entries + 1) * sizeof(EntryT *));
             if (all_entries == NULL) {
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
@@ -194,7 +200,8 @@ int invoke(MessageT *msg, struct table_t *table){
                 struct entry_t **list_entries = list_get_entries(table->lists[i]);
                 if (list_entries == NULL) {
                     for (int j = 0; j < index; j++) {
-                        entry_destroy(all_entries[j]);
+                        free(all_entries[j]->key);
+                        free(all_entries[j]);
                     }
                     free(all_entries);
                     msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
@@ -202,19 +209,34 @@ int invoke(MessageT *msg, struct table_t *table){
                     return -1;
                 }
 
-                // Copiar as entradas obtidas da lista para o array all_entries
                 for (int j = 0; list_entries[j] != NULL; j++) {
-                    all_entries[index++] = list_entries[j];
+                    
+                    EntryT *converted_entry = convert_to_entry_t(list_entries[j]);
+                    if (converted_entry != NULL) {
+                        all_entries[index++] = converted_entry; 
+                    } else {
+                        for (int k = 0; k < index; k++) {
+                            free(all_entries[k]->key);
+                            free(all_entries[k]);
+                        }
+                        free(all_entries);
+                        msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                        msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                        return -1;
+                    }
                 }
-                free(list_entries);  // Libertar o array temporário (mas não as entradas)
+                free(list_entries);
             }
-            all_entries[index] = NULL;  // Colocar o último elemento a NULL
+            all_entries[index] = NULL;  
 
-            // Configurar a mensagem de resposta com o array de entries
             msg->opcode = MESSAGE_T__OPCODE__OP_GETTABLE + 1;
             msg->c_type = MESSAGE_T__C_TYPE__CT_TABLE;
             msg->n_entries = index;
+
             msg->entries = all_entries;
+
+            break;
+
 
             break;
         
@@ -243,4 +265,26 @@ int invoke(MessageT *msg, struct table_t *table){
     return 0; 
 
 
+}
+
+
+/*
+* "Conver-te" entry_y para EntryT
+*/
+EntryT *convert_to_entry_t(struct entry_t *entry) {
+
+    if (entry == NULL) return NULL; 
+
+    EntryT *entry_t = malloc(sizeof(EntryT));
+    if (entry_t == NULL){
+        return NULL; 
+    }
+
+    entry_t__init(entry_t); 
+
+    entry_t->key = strdup(entry->key); 
+    entry_t->value.data = entry->value->data;
+    entry_t->value.len = entry->value->datasize;
+
+    return entry_t; 
 }

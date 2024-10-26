@@ -8,6 +8,7 @@
 #include <string.h>
 #include "htmessages.pb-c.h"
 #include "server_network.h"
+#include "server_skeleton.h"
 
 
 /*

@@ -58,7 +58,6 @@ int rtable_disconnect(struct rtable_t *rtable)
     // Resetar o descritor do socket na rtable
     rtable->sockfd = -1; //não sei quanto a necessidade disso
     free(rtable->server_address);
-    free(rtable->server_port);
     free(rtable);
     return 0;
 }
@@ -368,7 +367,25 @@ struct entry_t **rtable_get_table(struct rtable_t *rtable){
 
     // Copiar as entries da resposta
     for (size_t i = 0; i < response->n_entries; i++) {
-        entries[i] = entry_duplicate(response->entries[i]);
+        
+        // Alocar memória para os dados antes de block_create
+        void *data = malloc(response->entries[i]->value.len);
+        if (data == NULL) {
+            perror("Erro ao alocar memória para os dados");
+            message_t__free_unpacked(response, NULL);
+            return NULL;
+        }
+
+        // Criar o block_t
+        struct block_t *result_block = block_create(response->value.len, data);
+        if (result_block == NULL) {
+            perror("Erro ao criar block_t");
+            block_destroy(result_block);
+            message_t__free_unpacked(response, NULL);
+            return NULL;
+        }
+
+        entries[i] = entry_create(response->entries[i]->key,result_block);
         if (entries[i] == NULL) {
             printf("Erro ao duplicar a entry\n");
 

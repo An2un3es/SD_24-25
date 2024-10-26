@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
 #include "client_stub.h"
 #include "client_network.h" // Inclui as funções de rede
 #include "message-private.h"
 
 int main(int argc, char **argv) {
+
+    signal(SIGPIPE, SIG_IGN);  // Ignorar SIGPIPE
 
     if (argc != 2) {
         printf("Erro ao iniciar o cliente\n");

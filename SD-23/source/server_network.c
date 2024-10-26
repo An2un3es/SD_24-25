@@ -8,6 +8,7 @@
 #include <string.h>
 #include "table.h"
 #include "htmessages.pb-c.h"
+#include "message-private.h"
 
 /* Função para preparar um socket de receção de pedidos de ligação
 * num determinado porto.
@@ -106,14 +107,12 @@ int network_main_loop(int listening_socket, struct table_t *table){
 * reservando a memória necessária para a estrutura MessageT.
 * Retorna a mensagem com o pedido ou NULL em caso de erro.
 */
-MessageT *network_receive(int client_socket){
-
+MessageT *network_receive(int client_socket) {
     uint8_t buffer[1024];  // Buffer grande o suficiente
-    int recv_size;
+    int recv_size = sizeof(buffer); // Tamanho do buffer para ler
 
     // Ler os dados do socket
-    recv_size = recv(client_socket, buffer, sizeof(buffer), 0);
-    if (recv_size <= 0) {
+    if (read_all(client_socket, buffer, recv_size) < 0) {
         perror("Erro ao receber dados");
         return NULL;
     }
@@ -126,17 +125,16 @@ MessageT *network_receive(int client_socket){
     }
 
     return message;
-    
 }
+
 
 /* A função network_send() deve:
 * - Serializar a mensagem de resposta contida em msg;
 * - Enviar a mensagem serializada, através do client_socket.
 * Retorna 0 (OK) ou -1 em caso de erro.
 */
-int network_send(int client_socket, MessageT *msg){
-
-     // Serializar a mensagem usando Protocol Buffers
+int network_send(int client_socket, MessageT *msg) {
+    // Serializar a mensagem usando Protocol Buffers
     int size = message_t__get_packed_size(msg);
     uint8_t *buffer = malloc(size);
 
@@ -147,8 +145,8 @@ int network_send(int client_socket, MessageT *msg){
 
     message_t__pack(msg, buffer);
 
-    // Enviar a mensagem serializada
-    if (send(client_socket, buffer, size, 0) < 0) {
+    // Enviar a mensagem serializada usando write_all
+    if (write_all(client_socket, buffer, size) < 0) {
         perror("Erro ao enviar dados");
         free(buffer);
         return -1;
@@ -156,8 +154,8 @@ int network_send(int client_socket, MessageT *msg){
 
     free(buffer);
     return 0;
-
 }
+
 
 /* Liberta os recursos alocados por server_network_init(), nomeadamente
 * fechando o socket passado como argumento.

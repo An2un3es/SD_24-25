@@ -1,6 +1,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <signal.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +18,8 @@
 
 
 int main(int argc, char **argv) {
+
+    signal(SIGPIPE, SIG_IGN);  // Ignorar SIGPIPE
 
 
     // Verifica se foi passado algum argumento

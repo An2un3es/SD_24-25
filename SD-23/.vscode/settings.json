@@ -6,6 +6,7 @@
         "string": "c",
         "string_view": "c",
         "vector": "c",
-        "client_stub-private.h": "c"
+        "client_stub-private.h": "c",
+        "unistd.h": "c"
     }
 }

@@ -108,8 +108,6 @@ int rtable_put(struct rtable_t *rtable, struct entry_t *entry){
     message_t__free_unpacked(response, NULL);
 
     return 0;
-
-
 }
 
 /* Retorna o bloco da entrada da tabela com chave key, ou NULL caso não exista
@@ -127,7 +125,7 @@ struct block_t *rtable_get(struct rtable_t *rtable, char *key){
     MessageT *response = network_send_receive(rtable, &msg);
     if (response == NULL) {
         printf("Erro ao enviar/receber mensagem");
-        return -1;  
+        return NULL;  
     }
 
     // Verificar se a mensagem de resposta é uma mensagem de erro

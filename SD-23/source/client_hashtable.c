@@ -2,7 +2,6 @@
 #include <string.h>
 #include <signal.h>
 #include "client_stub.h"
-#include "client_network.h" // Inclui as funções de rede
 #include "message-private.h"
 
 int main(int argc, char **argv) {
@@ -111,13 +110,22 @@ int main(int argc, char **argv) {
         //----------------------------------------------
 
         } else if (strcmp(command, "size") == 0) {
-            int size = rtable_size(rtable);
+            char *badsintax = strtok(NULL, " ");
+            if (badsintax){
+                 printf("Uso: size \n");
+                 continue;
+            }
+           int size = rtable_size(rtable);
             printf("size: %d\n", size);
 
         //----------------------------------------------
 
         } else if (strcmp(command, "getkeys") == 0) {
-
+            char *badsintax = strtok(NULL, " ");
+            if (badsintax){
+                 printf("Uso: getkeys\n");
+                 continue;
+            }
             char ** keys=rtable_get_keys(rtable);
 
             if (keys == NULL) {
@@ -128,7 +136,11 @@ int main(int argc, char **argv) {
                 printf("-> %s\n", keys[i]);
             }
         } else if (strcmp(command, "gettable") == 0) {
-
+            char *badsintax = strtok(NULL, " ");
+            if (badsintax){
+                 printf("Uso: gettable\n");
+                 continue;
+            }
             struct entry_t **entrys=rtable_get_table(rtable);
             if (entrys == NULL) {
             printf("Array está vazio.\n");
@@ -144,7 +156,6 @@ int main(int argc, char **argv) {
             printf("Comando desconhecido: %s\n", command);
         }
     }
-
     // Fechar a conexão com o servidor
     rtable_disconnect(rtable);
     return 0;

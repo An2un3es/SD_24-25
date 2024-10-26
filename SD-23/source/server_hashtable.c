@@ -57,6 +57,7 @@ int main(int argc, char **argv) {
         perror("Erro ao inicializar a rede do servidor");
         return -1;
     }
+    //Provavelmente é qaqui que começa a concorrencia 
 
 
     // Entrar no loop principal para processar as conexões

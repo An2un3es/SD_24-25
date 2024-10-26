@@ -21,7 +21,7 @@ int server_network_init(short port){
 
     // Cria o socket TCP
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("Erro ao criar o socket");
+        printf("Erro ao criar o socket");
         return -1;
     }
 
@@ -33,14 +33,14 @@ int server_network_init(short port){
 
     // Faz o bind do socket ao endereço e à porta
     if (bind(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0) {
-        perror("Erro ao fazer o bind");
+        printf("Erro ao fazer o bind");
         close(sockfd); // Fecha o socket em caso de erro
         return -1;
     }
 
     // Coloca o socket em modo de escuta para aceitar conexões
     if (listen(sockfd, 5) < 0) {
-        perror("Erro ao executar o listen");
+        printf("Erro ao executar o listen");
         close(sockfd); // Fecha o socket em caso de erro
         return -1;
     }
@@ -50,7 +50,7 @@ int server_network_init(short port){
 }
 
 /* A função network_main_loop() deve:
-* - Aceitar uma conexão de um cliente;
+* - Aceitar uma conexão de um cliente; 
 * - Receber uma mensagem usando a função network_receive;
 * - Entregar a mensagem de-serializada ao skeleton para ser processada
 na tabela table;
@@ -73,8 +73,9 @@ int network_main_loop(int listening_socket, struct table_t *table){
 
         MessageT *request_msg = network_receive(client_socket);
 
-        if (request_msg == NULL) {
+        if (request_msg == NULL) { 
             printf("Erro ao receber a mensagem do cliente.\n");
+            network_send(client_socket, MESSAGE_T__OPCODE__OP_ERROR);
             close(client_socket);
             continue;
         }
@@ -83,6 +84,7 @@ int network_main_loop(int listening_socket, struct table_t *table){
         MessageT *response_msg = invoke(request_msg, table);
         if (response_msg == NULL) {
             printf("Erro ao processar a mensagem.\n");
+            network_send(client_socket, MESSAGE_T__OPCODE__OP_ERROR);
             close(client_socket);
             continue;
         }
@@ -90,9 +92,11 @@ int network_main_loop(int listening_socket, struct table_t *table){
         // Enviar a resposta de volta ao cliente
         if (network_send(client_socket, response_msg) < 0) {
             printf("Erro ao enviar a resposta para o cliente.\n");
+            close(client_socket);
+            continue;
         }
 
-        // Limpar e fechar a conexão
+        //Limpar e fechar a conexão
         message_t__free_unpacked(request_msg, NULL);
         close(client_socket);
     }
@@ -113,14 +117,14 @@ MessageT *network_receive(int client_socket) {
 
     // Ler os dados do socket
     if (read_all(client_socket, buffer, recv_size) < 0) {
-        perror("Erro ao receber dados");
+        printf("Erro ao receber dados");
         return NULL;
     }
 
     // Deserializar a mensagem recebida usando Protocol Buffers
     MessageT *message = message_t__unpack(NULL, recv_size, buffer);
     if (message == NULL) {
-        fprintf(stderr, "Erro ao de-serializar a mensagem\n");
+        printf(stderr, "Erro ao de-serializar a mensagem\n");
         return NULL;
     }
 
@@ -139,7 +143,7 @@ int network_send(int client_socket, MessageT *msg) {
     uint8_t *buffer = malloc(size);
 
     if (buffer == NULL) {
-        perror("Erro de alocação de memória");
+        printf("Erro de alocação de memória");
         return -1;
     }
 
@@ -147,11 +151,10 @@ int network_send(int client_socket, MessageT *msg) {
 
     // Enviar a mensagem serializada usando write_all
     if (write_all(client_socket, buffer, size) < 0) {
-        perror("Erro ao enviar dados");
+        printf("Erro ao enviar dados");
         free(buffer);
         return -1;
     }
-
     free(buffer);
     return 0;
 }
@@ -162,14 +165,7 @@ int network_send(int client_socket, MessageT *msg) {
 * Retorna 0 (OK) ou -1 em caso de erro.
 */
 int server_network_close(int socket){
-
-    if(socket==NULL)
-        return -1; 
-
-    if(close(socket)<0)
-        return -1;
-
-    return 0;
-
+    printf("Desconectando...");
+    return (socket == NULL || close(socket)<0)? -1:0 ; //mais  simples
 }
 

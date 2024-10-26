@@ -1,6 +1,11 @@
 #include <unistd.h> // para o write() e read()
 #include "message-private.h"
-
+/**
+ * Escreve a o conteudo que esta no socket
+ * @param sock descritor do socket
+ * @param buf buffer em questão
+ * @param len tamanho do babuffer
+ */
 int write_all(int sock, void *buf, int len) {
     int total_written = 0;
     int bytes_left = len;
@@ -21,7 +26,12 @@ int write_all(int sock, void *buf, int len) {
 
     return 0;
 }
-
+/**
+ * Le a o conteudo que esta no socket
+ * @param sock descritor do socket
+ * @param buf buffer em questão
+ * @param len tamanho do babuffer
+*/
 int read_all(int sock, void *buf, int len) {
     int total_read = 0;
     int bytes_left = len;

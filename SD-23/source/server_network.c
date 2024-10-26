@@ -114,59 +114,74 @@ na tabela table;
 * A função não deve retornar, a menos que ocorra algum erro. Nesse
 * caso retorna -1.
 */
-int network_main_loop(int listening_socket, struct table_t *table){
-
+int network_main_loop(int listening_socket, struct table_t *table) {
     struct sockaddr_in client;
     socklen_t client_len = sizeof(client);
     int client_socket;
 
-    // Aceitar a conexão de um cliente
+    printf("Servidor iniciado com sucesso (dentro do loop)\n");
+    printf("Servidor à espera de ligações\n");
+    fflush(stdout);
+
     while ((client_socket = accept(listening_socket, (struct sockaddr *)&client, &client_len)) > 0) {
-        printf("Cliente conectado.\n");
+        printf("Cliente conectado com socket %d.\n", client_socket);
+        fflush(stdout);
 
         // Receber a mensagem do cliente
+        printf("A receber mensagem do cliente.\n");
+        fflush(stdout);
 
         MessageT *request_msg = network_receive(client_socket);
 
         if (request_msg == NULL) { 
             printf("Erro ao receber a mensagem do cliente.\n");
+            fflush(stdout);
             MessageT error_msg;
             message_t__init(&error_msg);
-            error_msg.opcode=MESSAGE_T__OPCODE__OP_ERROR;
-            error_msg.c_type=MESSAGE_T__C_TYPE__CT_NONE;
+            error_msg.opcode = MESSAGE_T__OPCODE__OP_ERROR;
+            error_msg.c_type = MESSAGE_T__C_TYPE__CT_NONE;
             network_send(client_socket, &error_msg);
             close(client_socket);
             continue;
         }
 
         // Processar a mensagem no skeleton
-        if (invoke(request_msg, table)<0) {
+        printf("A processar a mensagem no skeleton.\n");
+        fflush(stdout);
+
+        if (invoke(request_msg, table) < 0) {
             printf("Erro ao processar a mensagem.\n");
+            fflush(stdout);
             MessageT error_msg;
             message_t__init(&error_msg);
-            error_msg.opcode=MESSAGE_T__OPCODE__OP_ERROR;
-            error_msg.c_type=MESSAGE_T__C_TYPE__CT_NONE;
+            error_msg.opcode = MESSAGE_T__OPCODE__OP_ERROR;
+            error_msg.c_type = MESSAGE_T__C_TYPE__CT_NONE;
             network_send(client_socket, &error_msg);
             close(client_socket);
-
             continue;
         }
 
         // Enviar a resposta de volta ao cliente
+        printf("A enviar resposta para o cliente.\n");
+        fflush(stdout);
+
         if (network_send(client_socket, request_msg) < 0) {
             printf("Erro ao enviar a resposta para o cliente.\n");
+            fflush(stdout);
             close(client_socket);
             continue;
         }
 
-        //Limpar e fechar a conexão
+        // Limpar e fechar a conexão
         message_t__free_unpacked(request_msg, NULL);
         close(client_socket);
+        printf("Conexão com cliente encerrada.\n");
+        fflush(stdout);
     }
 
     return -1;
-
 }
+
 
 
 /* Liberta os recursos alocados por server_network_init(), nomeadamente

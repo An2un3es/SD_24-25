@@ -265,3 +265,48 @@ int list_destroy(struct list_t *l){
 }
 
 
+/* Função auxiliar que constrói um array de struct entry_t* com cópias de todas 
+ * as entradas na lista, colocando o último elemento do array com o valor NULL 
+ * e reservando toda a memória necessária.
+ * Retorna o array de entries ou NULL em caso de erro.
+ */
+struct entry_t **list_get_entries(struct list_t *l) {
+
+    if (l == NULL || l->head == NULL) {
+        return NULL;
+    }
+
+    // Alocar memória para o array de entries (+1 para o NULL no final)
+    struct entry_t **entries_array = malloc((l->size + 1) * sizeof(struct entry_t *));
+    if (entries_array == NULL) {
+        return NULL;
+    }
+
+    struct node_t *current_node = l->head;
+    int i=0;
+    while (i < l->size) {
+        if (current_node == NULL || current_node->entry == NULL) {
+            for (int j = 0; j < i; j++) {
+                entry_destroy(entries_array[j]);
+            }
+            free(entries_array);
+            return NULL;
+        }
+
+        // Duplicar a entrada atual e adicioná-la ao array
+        entries_array[i] = entry_duplicate(current_node->entry);
+        if (entries_array[i] == NULL) {
+            for (int j = 0; j < i; j++) {
+                entry_destroy(entries_array[j]);
+            }
+            free(entries_array);
+            return NULL;
+        }
+        current_node = current_node->next;
+        i++;
+    }
+    
+    entries_array[i] = NULL;  // Colocar o último elemento a NULL
+    return entries_array;
+}
+

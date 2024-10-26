@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <signal.h>
+#include <stdlib.h>
 #include "client_stub.h"
 #include "message-private.h"
 
@@ -28,7 +29,7 @@ int main(int argc, char **argv) {
     // Inicializar a tabela remota (estrutura rtable_t)
     struct rtable_t *rtable = rtable_connect(server_and_port);
     if (rtable == NULL) {
-        printf(stderr, "Erro ao conectar ao servidor.\n");
+        fprintf(stderr, "Erro ao conectar ao servidor.\n");
         return -1;
     }
 
@@ -82,7 +83,7 @@ int main(int argc, char **argv) {
                 free(value_copy);
 
             } else {
-                printf("Uso: put <key> <value>\n");
+                printf("Exemplo: put <key> <value>\n");
             }
 
         //----------------------------------------------
@@ -90,10 +91,14 @@ int main(int argc, char **argv) {
         } else if (strcmp(command, "get") == 0) {
             char *key = strtok(NULL, " ");
             if (key) {
-                char *value = rtable_get(rtable, key);
-                printf("get: %s\n", value ? value : "não encontrado");
+                struct block_t *value = rtable_get(rtable, key);
+                if(value==NULL){
+                    printf("dados não encontrados");
+                }else{
+                    printf("block data: %p\n block size: %d\n", value->data, value->datasize);
+                }
             } else {
-                printf("Uso: get <key>\n");
+                printf("Exemplo: get <key>\n");
             }
         
         //----------------------------------------------
@@ -104,7 +109,7 @@ int main(int argc, char **argv) {
                 int result = rtable_del(rtable, key);
                 printf("del: %s\n", result == 0 ? "sucesso" : "falhou");
             } else {
-                printf("Uso: del <key>\n");
+                printf("Exemplo: del <key>\n");
             }
 
         //----------------------------------------------

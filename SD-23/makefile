@@ -16,41 +16,52 @@ BIN_DIR = binary
 # Garantir que as pastas de destino existam
 $(shell mkdir -p $(OBJ_DIR) $(BIN_DIR))
 
-# Definindo os arquivos de objeto
-OBJ_FILES = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(wildcard $(SRC_DIR)/*.c))
+# Alvos para os arquivos de objeto
+OBJECTS = $(OBJ_DIR)/block.o $(OBJ_DIR)/entry.o $(OBJ_DIR)/list.o $(OBJ_DIR)/table.o
+CLIENT_OBJECTS = $(OBJ_DIR)/client_hashtable.o $(OBJ_DIR)/client_stub.o $(OBJ_DIR)/client_network.o
+SERVER_OBJECTS = $(OBJ_DIR)/server_hashtable.o $(OBJ_DIR)/server_network.o $(OBJ_DIR)/server_skeleton.o
 
 # Alvo principal
-all: tests
+all: libtable client_hashtable server_hashtable
 
-# Teste de block
-$(BIN_DIR)/test_block: $(SRC_DIR)/test_block.c $(OBJ_DIR)/block.o
-	$(CC) $(CFLAGS) $(SRC_DIR)/test_block.c $(OBJ_DIR)/block.o -o $(BIN_DIR)/test_block
+# Criar a biblioteca libtable.a
+libtable: $(OBJECTS)
+	ar -rcs libtable.a $(OBJECTS)
 
-# Teste de entry
-$(BIN_DIR)/test_entry: $(SRC_DIR)/test_entry.c $(OBJ_DIR)/entry.o $(OBJ_DIR)/block.o
-	$(CC) $(CFLAGS) $(SRC_DIR)/test_entry.c $(OBJ_DIR)/entry.o $(OBJ_DIR)/block.o -o $(BIN_DIR)/test_entry
+# Compilando o cliente
+client_hashtable: $(CLIENT_OBJECTS) libtable.a
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/client_hashtable $(CLIENT_OBJECTS) libtable.a
 
-# Teste de list
-$(BIN_DIR)/test_list: $(SRC_DIR)/test_list.c $(OBJ_DIR)/list.o $(OBJ_DIR)/entry.o $(OBJ_DIR)/block.o
-	$(CC) $(CFLAGS) $(SRC_DIR)/test_list.c $(OBJ_DIR)/list.o $(OBJ_DIR)/entry.o $(OBJ_DIR)/block.o -o $(BIN_DIR)/test_list
+# Compilando o servidor
+server_hashtable: $(SERVER_OBJECTS) libtable.a
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/server_hashtable $(SERVER_OBJECTS) libtable.a
 
-# Teste de table
-$(BIN_DIR)/test_table: $(SRC_DIR)/test_table.c $(OBJ_DIR)/table.o $(OBJ_DIR)/list.o $(OBJ_DIR)/entry.o $(OBJ_DIR)/block.o
-	$(CC) $(CFLAGS) $(SRC_DIR)/test_table.c $(OBJ_DIR)/table.o $(OBJ_DIR)/list.o $(OBJ_DIR)/entry.o $(OBJ_DIR)/block.o -o $(BIN_DIR)/test_table
+# Regras para compilar os arquivos objeto do cliente
+$(OBJ_DIR)/client_hashtable.o: $(SRC_DIR)/client_hashtable.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Teste de serialization
-$(BIN_DIR)/test_serialization: $(SRC_DIR)/test_serialization.c $(OBJ_DIR)/serialization.o $(OBJ_DIR)/table.o $(OBJ_DIR)/list.o $(OBJ_DIR)/entry.o $(OBJ_DIR)/block.o
-	$(CC) $(CFLAGS) $(SRC_DIR)/test_serialization.c $(OBJ_DIR)/serialization.o $(OBJ_DIR)/table.o $(OBJ_DIR)/list.o $(OBJ_DIR)/entry.o $(OBJ_DIR)/block.o -o $(BIN_DIR)/test_serialization
+$(OBJ_DIR)/client_stub.o: $(SRC_DIR)/client_stub.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Regra para compilar todos os testes de uma vez
-tests: $(BIN_DIR)/test_block $(BIN_DIR)/test_entry $(BIN_DIR)/test_list $(BIN_DIR)/test_table $(BIN_DIR)/test_serialization
+$(OBJ_DIR)/client_network.o: $(SRC_DIR)/client_network.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Compilando os arquivos objeto
+# Regras para compilar os arquivos objeto do servidor
+$(OBJ_DIR)/server_hashtable.o: $(SRC_DIR)/server_hashtable.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/server_network.o: $(SRC_DIR)/server_network.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/server_skeleton.o: $(SRC_DIR)/server_skeleton.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Regras para compilar os arquivos objeto
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Limpeza dos arquivos gerados
 clean:
-	rm -rf $(BIN_DIR)/* $(OBJ_DIR)/*
+	rm -rf $(BIN_DIR)/* $(OBJ_DIR)/* libtable.a
 
-.PHONY: all tests clean
+.PHONY: all clean

@@ -1,7 +1,10 @@
-
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "table.h"
 #include "table-private.h"
 #include "list.h"
+#include "list-private.h"
 #include "htmessages.pb-c.h"
 
 /* Inicia o skeleton da tabela. 

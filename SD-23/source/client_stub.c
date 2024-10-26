@@ -1,4 +1,6 @@
-
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "block.h"
 #include "entry.h"
 #include "client_stub-private.h"
@@ -13,7 +15,7 @@
 struct rtable_t *rtable_connect(char *address_port){
 
 
-    struct rtable_t *rtable = (struct rtable *)malloc(sizeof(struct rtable_t));
+    struct rtable_t *rtable = (struct rtable_t *)malloc(sizeof(struct rtable_t));
 
     if (rtable == NULL)
         return NULL;
@@ -24,7 +26,7 @@ struct rtable_t *rtable_connect(char *address_port){
     char *port = strtok(copy, ":");
 
     rtable->server_address=host;
-    rtable->server_port=atoi(&port);
+    rtable->server_port=atoi(port);
 
 
     if (network_connect(rtable) < 0)

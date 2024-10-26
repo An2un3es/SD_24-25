@@ -163,7 +163,70 @@ int invoke(MessageT *msg, struct table_t *table){
             break;
         case MESSAGE_T__OPCODE__OP_GETTABLE:
 
+            if (msg->c_type != MESSAGE_T__C_TYPE__CT_NONE) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                return -1;
+            }
+
+            // Contar o total de entradas
+            int total_entries = 0;
+            int i = 0;
+            while (table->lists[i] != NULL) {
+                total_entries += table->lists[i]->size;
+                i++;
+            }
+
+            struct entry_t **all_entries = malloc((total_entries + 1) * sizeof(struct entry_t *));
+            if (all_entries == NULL) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                return -1;
+            }
+
+            int index = 0;
+            for (i = 0; i < table->size; i++) {
+                struct entry_t **list_entries = list_get_entries(table->lists[i]);
+                if (list_entries == NULL) {
+                    for (int j = 0; j < index; j++) {
+                        entry_destroy(all_entries[j]);
+                    }
+                    free(all_entries);
+                    msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                    msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                    return -1;
+                }
+
+                // Copiar as entradas obtidas da lista para o array all_entries
+                for (int j = 0; list_entries[j] != NULL; j++) {
+                    all_entries[index++] = list_entries[j];
+                }
+                free(list_entries);  // Libertar o array temporário (mas não as entradas)
+            }
+            all_entries[index] = NULL;  // Colocar o último elemento a NULL
+
+            // Configurar a mensagem de resposta com o array de entries
+            msg->opcode = MESSAGE_T__OPCODE__OP_GETTABLE + 1;
+            msg->c_type = MESSAGE_T__C_TYPE__CT_TABLE;
+            msg->n_entries = index;
+            msg->entries = all_entries;
+
             break;
+        
+        case MESSAGE_T__OPCODE__OP_BAD:
+
+            msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+            msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+
+            break;
+        
+        case MESSAGE_T__OPCODE__OP_ERROR:
+
+            msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+            msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+
+            break;
+
         default:
 
             return -1;

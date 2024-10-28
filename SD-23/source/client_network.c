@@ -52,6 +52,7 @@ int network_connect(struct rtable_t *rtable){
         return -1;
     }
 
+    printf("network_connect FUNCIONOU\n");
     return 0;
 
 }

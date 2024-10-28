@@ -17,13 +17,10 @@ int main(int argc, char **argv) {
 
     // Extrair <server> e <port> do argv[1]
     char *server_and_port = argv[1];
-    char *server_ip = strtok(server_and_port, ":");
-    char *port_str = strtok(NULL, ":");
-
-    if (server_ip == NULL || port_str == NULL) {
-            fprintf(stderr, "Erro: O formato esperado é <server>:<port>\n");
-            return -1;
-        }
+    if (strchr(server_and_port, ':') == NULL) { // Verifica se existe o caracter ':'
+        fprintf(stderr, "Erro: faltam : \n");
+        return -1;
+    }
 
 
     // Inicializar a tabela remota (estrutura rtable_t)
@@ -33,6 +30,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    printf("Mesmo ANTES DO WHILE\n");
     char input[256];
     while (1) {
         printf("Comando: ");

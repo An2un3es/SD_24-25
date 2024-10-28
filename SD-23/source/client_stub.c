@@ -12,31 +12,54 @@
  * em que address_port é uma string no formato <hostname>:<port>.
  * Retorna a estrutura rtable preenchida, ou NULL em caso de erro.
  */
-struct rtable_t *rtable_connect(char *address_port){
+struct rtable_t *rtable_connect(char *address_port) {
 
+    printf("Argumento recebido em rtable_connect: %s\n", address_port);
 
     struct rtable_t *rtable = (struct rtable_t *)malloc(sizeof(struct rtable_t));
 
-    if (rtable == NULL)
+    if (rtable == NULL) {
         return NULL;
+    }
 
     char *copy = strdup(address_port);
-    char *host = strtok(copy, ":");
-    copy = strtok(NULL, ":");
-    char *port = strtok(copy, ":");
-
-    rtable->server_address=host;
-    rtable->server_port=atoi(port);
-
-
-    if (network_connect(rtable) < 0)
-    {
+    if (copy == NULL) {
         free(rtable);
         return NULL;
     }
 
+    char *host = strtok(copy, ":");
+    char *port_str = strtok(NULL, ":");
+
+
+    printf("IP: %s\n", host);
+    printf("PORTO: %s\n", port_str);
+
+    // Verifica se host e port_str não são NULL
+    if (host == NULL || port_str == NULL) {
+        fprintf(stderr, "Erro: Formato esperado é <ip>:<port>\n");
+        free(copy);
+        free(rtable);
+        return NULL;
+    }
+
+    // Copia o endereço do servidor
+    rtable->server_address = strdup(host);
+    rtable->server_port = atoi(port_str);
+
+    // Limpa a memória de 'copy' pois já foi duplicada em rtable->server_address
+    free(copy);
+
+    // Tenta conectar ao servidor
+    if (network_connect(rtable) < 0) {
+        free(rtable->server_address);
+        free(rtable);
+        return NULL;
+    }
+    printf("rtable_connect FUNCIONOU\n");
     return rtable;
 }
+
 
 /* Termina a associação entre o cliente e o servidor, fechando a
  * ligação com o servidor e libertando toda a memória local.

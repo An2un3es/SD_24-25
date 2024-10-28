@@ -62,7 +62,7 @@ MessageT *network_receive(int client_socket) {
 
     // Ler os dados do socket
     if (read_all(client_socket, buffer, recv_size) < 0) {
-        printf("Erro ao receber dados");
+        printf("Erro ao receber dados \n");
         return NULL;
     }
 

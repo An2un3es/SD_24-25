@@ -176,6 +176,7 @@ int invoke(MessageT *msg, struct table_t *table){
                 msg->opcode = MESSAGE_T__OPCODE__OP_GETKEYS + 1;  
                 msg->c_type = MESSAGE_T__C_TYPE__CT_KEYS;
                 msg->keys=keys;
+                msg-> n_keys = table_size(table);
             }
 
             break;
@@ -188,12 +189,9 @@ int invoke(MessageT *msg, struct table_t *table){
             }
 
             // Contar o total de entradas
-            int total_entries = 0;
+            int total_entries = table_size(table);
             int i = 0;
-            while (table->lists[i] != NULL) {
-                total_entries += table->lists[i]->size;
-                i++;
-            }
+           
 
             EntryT **all_entries = malloc((total_entries + 1) * sizeof(EntryT *));
             if (all_entries == NULL) {
@@ -239,14 +237,9 @@ int invoke(MessageT *msg, struct table_t *table){
             msg->opcode = MESSAGE_T__OPCODE__OP_GETTABLE + 1;
             msg->c_type = MESSAGE_T__C_TYPE__CT_TABLE;
             msg->n_entries = index;
-
             msg->entries = all_entries;
 
             break;
-
-
-            break;
-        
         case MESSAGE_T__OPCODE__OP_BAD:
 
             msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
@@ -276,7 +269,7 @@ int invoke(MessageT *msg, struct table_t *table){
 
 
 /*
-* "Conver-te" entry_y para EntryT
+* "Conver--te" entry_y para EntryT
 */
 EntryT *convert_to_entry_t(struct entry_t *entry) {
 
@@ -290,7 +283,7 @@ EntryT *convert_to_entry_t(struct entry_t *entry) {
     entry_t__init(entry_t); 
 
     entry_t->key = strdup(entry->key); 
-    entry_t->value.data = entry->value->data;
+    entry_t->value.data = entry->value->data; //falta memcpy &&& possiveis mais erros aqui no comando gettables
     entry_t->value.len = entry->value->datasize;
 
     return entry_t; 

@@ -89,7 +89,7 @@ MessageT *network_receive(int client_socket) {
     MessageT *message = message_t__unpack(NULL, msg_size, msg_buffer);
     free(msg_buffer);  // Libertar o buffer após a deserialização
     if (message == NULL) {
-        fprintf(stderr, "Erro ao de-serializar a mensagem.\n");
+        printf( "Erro ao de-serializar a mensagem.\n");
         return NULL;
     }
 
@@ -107,7 +107,7 @@ int network_send(int client_socket, MessageT *msg) {
     size_t msg_size = message_t__get_packed_size(msg);
     uint8_t *msg_serialized = malloc(msg_size);
     if (msg_serialized == NULL) {
-        printf(stderr, "Erro ao alocar memória para a resposta.\n");
+        printf("Erro ao alocar memória para a resposta.\n");
         return -1;
     }
 
@@ -117,13 +117,13 @@ int network_send(int client_socket, MessageT *msg) {
 
 uint32_t msg_size_network = htonl(msg_size);
     if (write_all(client_socket, &msg_size_network, sizeof(msg_size_network)) < 0) {
-        printf(stderr, "Erro ao enviar o tamanho da mensagem.\n");
+        printf( "Erro ao enviar o tamanho da mensagem.\n");
         free(msg_serialized);
         return -1;
     } 
 
     if (write_all(client_socket, msg_serialized, msg_size) < 0) {
-        printf(stderr, "Erro ao enviar a mensagem ao cliente.\n");
+        printf( "Erro ao enviar a mensagem ao cliente.\n");
         free(msg_serialized);
         return -1;
     }

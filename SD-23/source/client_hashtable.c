@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
                 continue;
             }
 
-            if (keys[0]==NULL){
+            if (keys[0]==NULL){ // *k 
                 printf("Tabela vazia.\n");
                 continue;
             }

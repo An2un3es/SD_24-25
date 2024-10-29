@@ -107,28 +107,28 @@ int network_send(int client_socket, MessageT *msg) {
     size_t msg_size = message_t__get_packed_size(msg);
     uint8_t *msg_serialized = malloc(msg_size);
     if (msg_serialized == NULL) {
-        fprintf(stderr, "Erro ao alocar memória para a resposta.\n");
+        printf(stderr, "Erro ao alocar memória para a resposta.\n");
         return -1;
     }
 
     message_t__pack(msg, msg_serialized);
     printf("Mensagem serializada para o cliente com opcode: %d\n", msg->opcode);
+    fflush(stdout);
 
-    uint32_t msg_size_network = htonl(msg_size);
+uint32_t msg_size_network = htonl(msg_size);
     if (write_all(client_socket, &msg_size_network, sizeof(msg_size_network)) < 0) {
-        fprintf(stderr, "Erro ao enviar o tamanho da mensagem.\n");
+        printf(stderr, "Erro ao enviar o tamanho da mensagem.\n");
         free(msg_serialized);
         return -1;
-    }
+    } 
 
     if (write_all(client_socket, msg_serialized, msg_size) < 0) {
-        fprintf(stderr, "Erro ao enviar a mensagem ao cliente.\n");
+        printf(stderr, "Erro ao enviar a mensagem ao cliente.\n");
         free(msg_serialized);
         return -1;
     }
 
     free(msg_serialized);
-    printf("");
     return 0;
 }
 
@@ -186,11 +186,11 @@ int network_main_loop(int listening_socket, struct table_t *table) {
                 fflush(stdout);
                 break;
             }
-
             // Limpa a mensagem recebida
             if (request_msg != NULL) {
                 message_t__free_unpacked(request_msg, NULL);
             }
+        
         }
 
         // Fecha a conexão após o cliente encerrar ou em caso de erro

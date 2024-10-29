@@ -102,7 +102,7 @@ int block_destroy(struct block_t* b)
     {
         free(b->data);
         b->data = NULL;
-    }
+    } 
     free(b);
     b = NULL;
     return 0;

@@ -60,16 +60,23 @@ int invoke(MessageT *msg, struct table_t *table){
             }
             
             // Criar um novo block com key e value
-            struct block_t *new_block = block_create(msg->entry->value.len, msg->entry->value.data);
             
+            struct block_t *new_block = block_create(msg->entry->value.len, "");
+            new_block->data = malloc(msg->entry->value.len);
+            memcpy(new_block->data, msg->entry->value.data, msg->entry->value.len);
+        
             if (new_block == NULL) {
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                 return -1;
             }
 
+
+
             // Executa a operação PUT na tabela
             int result1 = table_put(table, msg->entry->key ,new_block);
+
+
 
             // Define a resposta com base no resultado
             if (result1 == 0) {

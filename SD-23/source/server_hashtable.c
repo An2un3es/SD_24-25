@@ -22,8 +22,7 @@ int main(int argc, char **argv) {
 
     signal(SIGPIPE, SIG_IGN);  // Ignorar SIGPIPE
 
-    printf("Chega aqui1\n");
-    fflush(stdout);
+
 
     // Verifica se foi passado algum argumento
     if (argc != 3) {
@@ -32,8 +31,6 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    printf("Chega aqui2\n");
-    fflush(stdout);
 
     // Extrair <server> e <port> do argv[1]
     char *server_and_port = argv[1];
@@ -47,8 +44,6 @@ int main(int argc, char **argv) {
 
     int port = atoi(port_str);
 
-    printf("Chega aqui3\n");
-    fflush(stdout);
 
     //criar tabela com n_listas pedidas
     int n_listas = atoi(argv[2]);

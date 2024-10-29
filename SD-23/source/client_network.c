@@ -67,6 +67,8 @@ int network_connect(struct rtable_t *rtable){
 * - Retornar a mensagem de-serializada ou NULL em caso de erro.
 */
 MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg) {
+
+    printf("DENTRO DE NETWORK_SEND_RECEIVE\n");
     if (rtable == NULL || msg == NULL) {
         fprintf(stderr, "Erro: %s é NULL.\n", rtable == NULL ? "rtable" : "msg");
         return NULL;

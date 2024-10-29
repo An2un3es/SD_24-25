@@ -78,7 +78,6 @@ int main(int argc, char **argv) {
 
                 int result = rtable_put(rtable, entry);
                 printf("put: %s\n", result == 0 ? "sucesso" : "falhou");
-                entry_destroy(entry);
                 free(value_copy);
 
             } else {
@@ -93,7 +92,7 @@ int main(int argc, char **argv) {
             if (key) {
                 struct block_t *value = rtable_get(rtable, key);
                 if(value==NULL){
-                    printf("dados não encontrados");
+                    printf("Dados não encontrados\n");
                 }else{
                     printf("block data: %p\n block size: %d\n", value->data, value->datasize);
                 }
@@ -108,7 +107,7 @@ int main(int argc, char **argv) {
             char *key = strtok(NULL, " ");
             if (key) {
                 int result = rtable_del(rtable, key);
-                printf("del: %s\n", result == 0 ? "sucesso" : "falhou");
+                printf("del: %s\n", result == 0 ? "entry deletada com sucesso" : "falhou ou não foi encontrado");
             } else {
                 printf("Exemplo: del <key>\n");
             }
@@ -139,8 +138,15 @@ int main(int argc, char **argv) {
             char ** keys=rtable_get_keys(rtable);
 
             if (keys == NULL) {
-            printf("Array está vazio.\n");
+                printf("Erro ao conseguir as keys.\n");
+                continue;
             }
+
+            if (keys[0]==NULL){
+                printf("Tabela vazia.\n");
+                continue;
+            }
+
             printf("Keys da Tabela:\n");
             for (int i = 0; keys[i] != NULL; i++) {
                 printf("-> %s\n", keys[i]);

@@ -57,24 +57,45 @@ int server_network_init(short port){
 * Retorna a mensagem com o pedido ou NULL em caso de erro.
 */
 MessageT *network_receive(int client_socket) {
-    uint8_t buffer[1024];  // Buffer grande o suficiente
-    int recv_size = sizeof(buffer); // Tamanho do buffer para ler
+    printf("DENTRO DO NETWORK_RECEIVE\n");
 
-    // Ler os dados do socket
-    if (read_all(client_socket, buffer, recv_size) < 0) {
-        printf("Erro ao receber dados \n");
+    //Ler o tamanho da mensagem
+    uint32_t msg_size_network;
+    if (read_all(client_socket, &msg_size_network, sizeof(msg_size_network)) < 0) {
+        fprintf(stderr, "Erro ao ler o tamanho da mensagem.\n");
         return NULL;
     }
 
-    // Deserializar a mensagem recebida usando Protocol Buffers
-    MessageT *message = message_t__unpack(NULL, recv_size, buffer);
+    size_t msg_size = ntohl(msg_size_network);  // Converter para ordem do host
+    printf("Tamanho da mensagem recebida: %zu bytes\n", msg_size);
+
+    //Alocar um buffer com o tamanho exato da mensagem
+    uint8_t *msg_buffer = malloc(msg_size);
+    if (msg_buffer == NULL) {
+        fprintf(stderr, "Erro ao alocar memória para a mensagem.\n");
+        return NULL;
+    }
+
+    // 3. Ler a mensagem completa usando o tamanho previamente lido
+    if (read_all(client_socket, msg_buffer, msg_size) < 0) {
+        fprintf(stderr, "Erro ao ler a mensagem completa.\n");
+        free(msg_buffer);
+        return NULL;
+    }
+
+    printf("MENSAGEM LIDA PELO SERVIDOR\n");
+
+    // 4. Deserializar a mensagem usando Protocol Buffers
+    MessageT *message = message_t__unpack(NULL, msg_size, msg_buffer);
+    free(msg_buffer);  // Libertar o buffer após a deserialização
     if (message == NULL) {
-        fprintf(stderr, "Erro ao de-serializar a mensagem\n");
+        fprintf(stderr, "Erro ao de-serializar a mensagem.\n");
         return NULL;
     }
 
     return message;
 }
+
 
 
 /* A função network_send() deve:
@@ -83,24 +104,31 @@ MessageT *network_receive(int client_socket) {
 * Retorna 0 (OK) ou -1 em caso de erro.
 */
 int network_send(int client_socket, MessageT *msg) {
-    // Serializar a mensagem usando Protocol Buffers
-    int size = message_t__get_packed_size(msg);
-    uint8_t *buffer = malloc(size);
-
-    if (buffer == NULL) {
-        printf("Erro de alocação de memória");
+    size_t msg_size = message_t__get_packed_size(msg);
+    uint8_t *msg_serialized = malloc(msg_size);
+    if (msg_serialized == NULL) {
+        fprintf(stderr, "Erro ao alocar memória para a resposta.\n");
         return -1;
     }
 
-    message_t__pack(msg, buffer);
+    message_t__pack(msg, msg_serialized);
+    printf("Mensagem serializada para o cliente com opcode: %d\n", msg->opcode);
 
-    // Enviar a mensagem serializada usando write_all
-    if (write_all(client_socket, buffer, size) < 0) {
-        printf("Erro ao enviar dados");
-        free(buffer);
+    uint32_t msg_size_network = htonl(msg_size);
+    if (write_all(client_socket, &msg_size_network, sizeof(msg_size_network)) < 0) {
+        fprintf(stderr, "Erro ao enviar o tamanho da mensagem.\n");
+        free(msg_serialized);
         return -1;
     }
-    free(buffer);
+
+    if (write_all(client_socket, msg_serialized, msg_size) < 0) {
+        fprintf(stderr, "Erro ao enviar a mensagem ao cliente.\n");
+        free(msg_serialized);
+        return -1;
+    }
+
+    free(msg_serialized);
+    printf("");
     return 0;
 }
 
@@ -119,7 +147,6 @@ int network_main_loop(int listening_socket, struct table_t *table) {
     socklen_t client_len = sizeof(client);
     int client_socket;
 
-    printf("Servidor iniciado com sucesso (dentro do loop)\n");
     printf("Servidor à espera de ligações\n");
     fflush(stdout);
 
@@ -127,53 +154,46 @@ int network_main_loop(int listening_socket, struct table_t *table) {
         printf("Cliente conectado com socket %d.\n", client_socket);
         fflush(stdout);
 
-        // Receber a mensagem do cliente
-        printf("A receber mensagem do cliente.\n");
-        fflush(stdout);
-
-        MessageT *request_msg = network_receive(client_socket);
-
-        if (request_msg == NULL) { 
-            printf("Erro ao receber a mensagem do cliente.\n");
+        // Enquanto o cliente estiver conectado
+        while (1) {
+            printf("A receber mensagem do cliente.\n");
             fflush(stdout);
-            MessageT error_msg;
-            message_t__init(&error_msg);
-            error_msg.opcode = MESSAGE_T__OPCODE__OP_ERROR;
-            error_msg.c_type = MESSAGE_T__C_TYPE__CT_NONE;
-            network_send(client_socket, &error_msg);
-            close(client_socket);
-            continue;
+
+            MessageT *request_msg = network_receive(client_socket);
+
+            // Se a mensagem não foi recebida corretamente, ou o cliente fechou a conexão
+            if (request_msg == NULL) {
+                printf("Cliente desconectado ou erro ao receber a mensagem.\n");
+                fflush(stdout);
+                break; // Sair do loop interno para encerrar a conexão
+            }
+
+            // Processa a mensagem no skeleton
+            printf("A processar a mensagem no skeleton.\n");
+            fflush(stdout);
+            if (invoke(request_msg, table) < 0) {
+                printf("Erro ao processar a mensagem.\n");
+                fflush(stdout);
+                network_send(client_socket, request_msg);
+                break;
+            }
+
+            // Envia a resposta ao cliente
+            printf("A enviar resposta para o cliente.\n");
+            fflush(stdout);
+            if (network_send(client_socket, request_msg) < 0) {
+                printf("Erro ao enviar a resposta para o cliente.\n");
+                fflush(stdout);
+                break;
+            }
+
+            // Limpa a mensagem recebida
+            if (request_msg != NULL) {
+                message_t__free_unpacked(request_msg, NULL);
+            }
         }
 
-        // Processar a mensagem no skeleton
-        printf("A processar a mensagem no skeleton.\n");
-        fflush(stdout);
-
-        if (invoke(request_msg, table) < 0) {
-            printf("Erro ao processar a mensagem.\n");
-            fflush(stdout);
-            MessageT error_msg;
-            message_t__init(&error_msg);
-            error_msg.opcode = MESSAGE_T__OPCODE__OP_ERROR;
-            error_msg.c_type = MESSAGE_T__C_TYPE__CT_NONE;
-            network_send(client_socket, &error_msg);
-            close(client_socket);
-            continue;
-        }
-
-        // Enviar a resposta de volta ao cliente
-        printf("A enviar resposta para o cliente.\n");
-        fflush(stdout);
-
-        if (network_send(client_socket, request_msg) < 0) {
-            printf("Erro ao enviar a resposta para o cliente.\n");
-            fflush(stdout);
-            close(client_socket);
-            continue;
-        }
-
-        // Limpar e fechar a conexão
-        message_t__free_unpacked(request_msg, NULL);
+        // Fecha a conexão após o cliente encerrar ou em caso de erro
         close(client_socket);
         printf("Conexão com cliente encerrada.\n");
         fflush(stdout);

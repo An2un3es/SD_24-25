@@ -380,7 +380,7 @@ struct entry_t **rtable_get_table(struct rtable_t *rtable){
     }
 
     // Alocar memória para a cópia das chaves ((Verificar se não é preciso "+1"))
-    struct entry_t **entries = malloc((response->n_entries) * sizeof(struct entry_t *));
+    struct entry_t **entries = malloc((response->n_entries+1) * sizeof(struct entry_t *));
     if (entries == NULL) {
         printf("Erro ao alocar memória para as entries\n");
         message_t__free_unpacked(response, NULL);
@@ -391,16 +391,14 @@ struct entry_t **rtable_get_table(struct rtable_t *rtable){
     for (size_t i = 0; i < response->n_entries; i++) {
         
 
-        // Criar o block_t
         struct block_t *result_block = rtable_get(rtable,response->entries[i]->key);
         if (result_block == NULL) {
-            perror("Erro ao criar block_t");
-            block_destroy(result_block);
+            perror("Erro ao fazer get do block_t");
             message_t__free_unpacked(response, NULL);
             return NULL;
         }
 
-        entries[i] = entry_create(response->entries[i]->key,result_block);
+        entries[i] = entry_create(strdup(response->entries[i]->key),result_block);
         if (entries[i] == NULL) {
             printf("Erro ao duplicar a entry\n");
 

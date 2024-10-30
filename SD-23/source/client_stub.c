@@ -14,8 +14,6 @@
  */
 struct rtable_t *rtable_connect(char *address_port) {
 
-    printf("Argumento recebido em rtable_connect: %s\n", address_port);
-
     struct rtable_t *rtable = (struct rtable_t *)malloc(sizeof(struct rtable_t));
 
     if (rtable == NULL) {
@@ -56,7 +54,6 @@ struct rtable_t *rtable_connect(char *address_port) {
         free(rtable);
         return NULL;
     }
-    printf("rtable_connect FUNCIONOU\n");
     return rtable;
 }
 

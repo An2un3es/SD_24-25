@@ -64,8 +64,6 @@ int main(int argc, char **argv) {
     }
     //Provavelmente é qaqui que começa a concorrencia 
 
-    printf("Servidor iniciado com sucesso (pré-loop)\n");
-    fflush(stdout);
 
     // Entrar no loop principal para processar as conexões
     if (network_main_loop(listening_socket, table) < 0) {

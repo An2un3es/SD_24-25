@@ -52,7 +52,6 @@ int network_connect(struct rtable_t *rtable){
         return -1;
     }
 
-    printf("network_connect FUNCIONOU\n");
     return 0;
 
 }
@@ -68,7 +67,6 @@ int network_connect(struct rtable_t *rtable){
 */
 MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg) {
 
-    printf("DENTRO DE NETWORK_SEND_RECEIVE\n");
     if (rtable == NULL || msg == NULL) {
         fprintf(stderr, "Erro: %s é NULL.\n", rtable == NULL ? "rtable" : "msg");
         return NULL;
@@ -81,7 +79,6 @@ MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg) {
         return NULL;
     }
 
-    printf("SOCKET CHECK\n");
 
     // Serializar a mensagem contida em msg
     size_t msg_size = message_t__get_packed_size(msg);
@@ -92,7 +89,6 @@ MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg) {
     }
     message_t__pack(msg, msg_serialized);
 
-    printf("MENSAGEM FOI SERIALIZADA\n");
 
     // Enviar o tamanho da mensagem ao servidor
     uint32_t msg_size_network = htonl(msg_size);  // Converter para ordem de rede
@@ -102,7 +98,6 @@ MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg) {
         return NULL;
     }
 
-    printf("TAMANHO DA MENSAGEM ENVIADA AO SERVIDOR\n");
 
     // Enviar a mensagem serializada para o servidor
     if (write_all(socketfd, msg_serialized, msg_size) < 0) {
@@ -112,7 +107,6 @@ MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg) {
     }
     free(msg_serialized);  
 
-    printf("MENSAGEM ENVIADA AO SERVIDOR\n");
 
     // Esperar a resposta do servidor (tamanho da mensagem)
     uint32_t response_size_network;
@@ -122,7 +116,6 @@ MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg) {
     }
     size_t response_size = ntohl(response_size_network);  // Convertendo para ordem do host
 
-    printf("MENSAGEM RECEBIDA DO SERVIDOR\n");
 
     // Alocar memória para a resposta e receber a mensagem completa
     uint8_t *response_buf = (uint8_t *)malloc(response_size);

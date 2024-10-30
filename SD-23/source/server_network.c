@@ -57,7 +57,6 @@ int server_network_init(short port){
 * Retorna a mensagem com o pedido ou NULL em caso de erro.
 */
 MessageT *network_receive(int client_socket) {
-    printf("DENTRO DO NETWORK_RECEIVE\n");
 
     //Ler o tamanho da mensagem
     uint32_t msg_size_network;
@@ -67,7 +66,6 @@ MessageT *network_receive(int client_socket) {
     }
 
     size_t msg_size = ntohl(msg_size_network);  // Converter para ordem do host
-    printf("Tamanho da mensagem recebida: %zu bytes\n", msg_size);
 
     //Alocar um buffer com o tamanho exato da mensagem
     uint8_t *msg_buffer = malloc(msg_size);
@@ -83,7 +81,6 @@ MessageT *network_receive(int client_socket) {
         return NULL;
     }
 
-    printf("MENSAGEM LIDA PELO SERVIDOR\n");
 
     // 4. Deserializar a mensagem usando Protocol Buffers
     MessageT *message = message_t__unpack(NULL, msg_size, msg_buffer);
@@ -112,8 +109,6 @@ int network_send(int client_socket, MessageT *msg) {
     }
 
     message_t__pack(msg, msg_serialized);
-    printf("Mensagem serializada para o cliente com opcode: %d\n", msg->opcode);
-    fflush(stdout);
 
 uint32_t msg_size_network = htonl(msg_size);
     if (write_all(client_socket, &msg_size_network, sizeof(msg_size_network)) < 0) {
@@ -151,12 +146,12 @@ int network_main_loop(int listening_socket, struct table_t *table) {
     fflush(stdout);
 
     while ((client_socket = accept(listening_socket, (struct sockaddr *)&client, &client_len)) > 0) {
-        printf("Cliente conectado com socket %d.\n", client_socket);
+        printf("Cliente conectado com sucesso.\n");
         fflush(stdout);
 
         // Enquanto o cliente estiver conectado
         while (1) {
-            printf("A receber mensagem do cliente.\n");
+            printf("À espera de pedido do cliente.\n");
             fflush(stdout);
 
             MessageT *request_msg = network_receive(client_socket);
@@ -169,8 +164,6 @@ int network_main_loop(int listening_socket, struct table_t *table) {
             }
 
             // Processa a mensagem no skeleton
-            printf("A processar a mensagem no skeleton.\n");
-            fflush(stdout);
             if (invoke(request_msg, table) < 0) {
                 printf("Erro ao processar a mensagem.\n");
                 fflush(stdout);
@@ -178,9 +171,7 @@ int network_main_loop(int listening_socket, struct table_t *table) {
                 break;
             }
 
-            // Envia a resposta ao cliente
-            printf("A enviar resposta para o cliente.\n");
-            fflush(stdout);
+            //Enviar mensagem de resposta ao cliente
             if (network_send(client_socket, request_msg) < 0) {
                 printf("Erro ao enviar a resposta para o cliente.\n");
                 fflush(stdout);

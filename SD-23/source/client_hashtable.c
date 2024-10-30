@@ -30,7 +30,6 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    printf("Mesmo ANTES DO WHILE\n");
     char input[256];
     while (1) {
         printf("Comando: ");
@@ -48,7 +47,6 @@ int main(int argc, char **argv) {
         //----------------------------------------------
 
         if (strcmp(command, "put") == 0) {
-            printf("COMANDO PUT.\n");
             char *key = strtok(NULL, " ");
             char *value = strtok(NULL, "");
             
@@ -87,7 +85,6 @@ int main(int argc, char **argv) {
         //----------------------------------------------
 
         } else if (strcmp(command, "get") == 0) {
-            printf("COMANDO GET.\n");
             char *key = strtok(NULL, " ");
             if (key) {
                 struct block_t *value = rtable_get(rtable, key);
@@ -103,7 +100,6 @@ int main(int argc, char **argv) {
         //----------------------------------------------
 
         } else if (strcmp(command, "del") == 0) {
-            printf("COMANDO DEL.\n");
             char *key = strtok(NULL, " ");
             if (key) {
                 int result = rtable_del(rtable, key);
@@ -116,7 +112,6 @@ int main(int argc, char **argv) {
 
         } else if (strcmp(command, "size") == 0) {
 
-            printf("COMANDO SIZE\n");
             char *badsintax = strtok(NULL, " ");
             if (badsintax){
                  printf("Uso: size \n");
@@ -129,7 +124,6 @@ int main(int argc, char **argv) {
         //----------------------------------------------
 
         } else if (strcmp(command, "getkeys") == 0) {
-            printf("COMANDO GETKEYS.\n");
             char *badsintax = strtok(NULL, " ");
             if (badsintax){
                  printf("Uso: getkeys\n");
@@ -152,7 +146,6 @@ int main(int argc, char **argv) {
                 printf("-> %s\n", keys[i]);
             }
         } else if (strcmp(command, "gettable") == 0) {
-            printf("COMANDO GETTABLE.\n");
             char *badsintax = strtok(NULL, " ");
             if (badsintax){
                  printf("Uso: gettable\n");

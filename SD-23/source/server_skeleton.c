@@ -191,7 +191,6 @@ int invoke(MessageT *msg, struct table_t *table){
 
             // Contar o total de entradas
             int total_entries = table_size(table);
-            int i = 0;
            
 
             EntryT **all_entries = malloc((total_entries + 1) * sizeof(EntryT *));
@@ -201,43 +200,35 @@ int invoke(MessageT *msg, struct table_t *table){
                 return -1;
             }
 
-            int index = 0;
-            for (i = 0; i < table->size; i++) {
+            msg->n_entries = 0;
+            for (int i = 0; i < table->size; i++) {
                 struct entry_t **list_entries = list_get_entries(table->lists[i]);
-                if (list_entries == NULL) {
-                    for (int j = 0; j < index; j++) {
-                        free(all_entries[j]->key);
-                        free(all_entries[j]);
-                    }
-                    free(all_entries);
-                    msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
-                    msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
-                    return -1;
-                }
-
-                for (int j = 0; list_entries[j] != NULL; j++) {
-                    
-                    EntryT *converted_entry = convert_to_entry_t(list_entries[j]);
-                    if (converted_entry != NULL) {
-                        all_entries[index++] = converted_entry; 
-                    } else {
-                        for (int k = 0; k < index; k++) {
-                            free(all_entries[k]->key);
-                            free(all_entries[k]);
+                if (list_entries != NULL) {
+                    for (int j = 0; list_entries[j] != NULL; j++) {
+                        EntryT *converted_entry = convert_to_entry_t(list_entries[j]);
+                        if (converted_entry != NULL) {
+                            all_entries[msg->n_entries++] = converted_entry;
+                        } else {
+                            // Liberar memória no caso de erro e retornar -1
+                            for (int k = 0; k < msg->n_entries; k++) {
+                                free(all_entries[k]->key);
+                                free(all_entries[k]->value.data);
+                                free(all_entries[k]);
+                            }
+                            free(all_entries);
+                            msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                            msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                            return -1;
                         }
-                        free(all_entries);
-                        msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
-                        msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
-                        return -1;
                     }
+                    free(list_entries);
                 }
-                free(list_entries);
             }
-            all_entries[index] = NULL;  
+
+            all_entries[msg->n_entries] = NULL;  // Terminar com `NULL`
 
             msg->opcode = MESSAGE_T__OPCODE__OP_GETTABLE + 1;
             msg->c_type = MESSAGE_T__C_TYPE__CT_TABLE;
-            msg->n_entries = index;
             msg->entries = all_entries;
             printf("Comando gettable executado com sucesso\n");
             break;
@@ -273,19 +264,35 @@ int invoke(MessageT *msg, struct table_t *table){
 * "Conver--te" entry_y para EntryT
 */
 EntryT *convert_to_entry_t(struct entry_t *entry) {
+    if (entry == NULL) return NULL;
 
-    if (entry == NULL) return NULL; 
-
+    // Alocar `EntryT` na heap
     EntryT *entry_t = malloc(sizeof(EntryT));
-    if (entry_t == NULL){
-        return NULL; 
+    if (entry_t == NULL) {
+        return NULL;
     }
 
-    entry_t__init(entry_t); 
+    // Inicializar `EntryT`
+    entry_t__init(entry_t);
 
-    entry_t->key = strdup(entry->key); 
-    entry_t->value.data = entry->value->data; //falta memcpy &&& possiveis mais erros aqui no comando gettables
+    // Copiar a chave
+    entry_t->key = strdup(entry->key);
+    if (entry_t->key == NULL) {
+        free(entry_t);
+        return NULL;
+    }
+
+    // Configurar `value` com `len` e alocar espaço para `data`
     entry_t->value.len = entry->value->datasize;
+    entry_t->value.data = malloc(entry->value->datasize);
+    if (entry_t->value.data == NULL) {
+        free(entry_t->key);
+        free(entry_t);
+        return NULL;
+    }
 
-    return entry_t; 
+    // Copiar os dados
+    memcpy(entry_t->value.data, entry->value->data, entry->value->datasize);
+
+    return entry_t;
 }

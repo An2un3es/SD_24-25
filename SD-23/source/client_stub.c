@@ -361,7 +361,7 @@ struct entry_t **rtable_get_table(struct rtable_t *rtable){
 
     MessageT *response = network_send_receive(rtable, &msg);
     if (response == NULL) {
-        printf("Erro ao enviar/receber mensagem");
+        printf("Erro ao enviar/receber mensagem\n");
         return NULL;
     }
 
@@ -390,16 +390,9 @@ struct entry_t **rtable_get_table(struct rtable_t *rtable){
     // Copiar as entries da resposta
     for (size_t i = 0; i < response->n_entries; i++) {
         
-        // Alocar memória para os dados antes de block_create
-        void *data = malloc(response->entries[i]->value.len);
-        if (data == NULL) {
-            perror("Erro ao alocar memória para os dados");
-            message_t__free_unpacked(response, NULL);
-            return NULL;
-        }
 
         // Criar o block_t
-        struct block_t *result_block = block_create(response->value.len, data);
+        struct block_t *result_block = rtable_get(rtable,response->entries[i]->key);
         if (result_block == NULL) {
             perror("Erro ao criar block_t");
             block_destroy(result_block);

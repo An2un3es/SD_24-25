@@ -101,6 +101,7 @@ MessageT *network_receive(int client_socket) {
 * Retorna 0 (OK) ou -1 em caso de erro.
 */
 int network_send(int client_socket, MessageT *msg) {
+    
     size_t msg_size = message_t__get_packed_size(msg);
     uint8_t *msg_serialized = malloc(msg_size);
     if (msg_serialized == NULL) {

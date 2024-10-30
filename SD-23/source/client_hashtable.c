@@ -153,7 +153,12 @@ int main(int argc, char **argv) {
             }
             struct entry_t **entrys=rtable_get_table(rtable);
             if (entrys == NULL) {
-            printf("Array está vazio.\n");
+                printf("Erro ao conseguir as entrys.\n");
+                continue;
+            }
+            if(entrys[0] == NULL){
+                printf("Array está vazio.\n");
+                continue;
             }
             printf("Entries da Tabela:\n");
             for (int i = 0; entrys[i] != NULL; i++) {

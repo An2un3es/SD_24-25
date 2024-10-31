@@ -149,11 +149,11 @@ int network_main_loop(int listening_socket, struct table_t *table) {
     while ((client_socket = accept(listening_socket, (struct sockaddr *)&client, &client_len)) > 0) {
         printf("Cliente conectado com sucesso.\n");
         fflush(stdout);
+        printf("Cliente pode comçar com os pedidos.\n");
+        fflush(stdout);
 
         // Enquanto o cliente estiver conectado
         while (1) {
-            printf("À espera de pedido do cliente.\n");
-            fflush(stdout);
 
             MessageT *request_msg = network_receive(client_socket);
 

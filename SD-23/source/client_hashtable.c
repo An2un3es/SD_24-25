@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
                 if(value==NULL){
                     printf("Dados não encontrados\n");
                 }else{
-                    printf("block data: %p\n block size: %d\n", value->data, value->datasize);
+                    printf("data: %p\n data size: %d\n", value->data, value->datasize);
                 }
             } else {
                 printf("Exemplo: get <key>\n");
@@ -157,13 +157,15 @@ int main(int argc, char **argv) {
                 continue;
             }
             if(entrys[0] == NULL){
-                printf("Array está vazio.\n");
+                printf("Tabela vazia.\n");
                 continue;
             }
             printf("Entries da Tabela:\n");
             for (int i = 0; entrys[i] != NULL; i++) {
                 printf("Entry nº %d: Key->%s | Datasize-> %d\n", i,entrys[i]->key, entrys[i]->value->datasize);
+                entry_destroy(entrys[i]);
             }
+            free(entrys);
             
         } else if (strcmp(command, "quit") == 0) {
             break;

@@ -238,7 +238,6 @@ int rtable_del(struct rtable_t *rtable, char *key){
 /* Retorna o número de elementos contidos na tabela ou -1 em caso de erro.
  */
 int rtable_size(struct rtable_t *rtable){
-    printf("DENTRO DO RTABLE_SIZE.\n");
 
     MessageT msg;
     message_t__init(&msg);
@@ -250,7 +249,6 @@ int rtable_size(struct rtable_t *rtable){
         printf("Erro ao enviar/receber mensagem");
         return -1;
     }
-    printf("PASSOU NETWORK_SEND_RECEIVE\n");
 
     // Verificar se a mensagem de resposta é uma mensagem de erro
     if (response->opcode == MESSAGE_T__OPCODE__OP_ERROR && response->c_type == MESSAGE_T__C_TYPE__CT_NONE) {

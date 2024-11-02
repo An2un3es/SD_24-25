@@ -238,13 +238,11 @@ int table_destroy(struct table_t *t){
         return -1;
     
     for(int i =0; i<t->size; i++){
-
         struct list_t * lista =t->lists[i];
         list_destroy(lista);
     }
 
     free(t);
-
     return 0;
 
 

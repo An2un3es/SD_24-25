@@ -1,3 +1,8 @@
+/* Grupo 23
+Gabriel Gameiro - 56299
+Rodrigo Antunes - 56321
+Carolina Romeira - 59867
+*/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -7,7 +12,6 @@
 #include "list-private.h"
 #include "htmessages.pb-c.h"
 #include "block.h"
-
 
 EntryT *convert_to_entry_t(struct entry_t *entry);
 
@@ -21,7 +25,6 @@ struct table_t *server_skeleton_init(int n_lists){
 
     if(n_lists<=0)
         return NULL;
-
     struct table_t *table =table_create(n_lists);
     if(table==NULL)
         return NULL;
@@ -70,11 +73,7 @@ int invoke(MessageT *msg, struct table_t *table){
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                 return -1;
             }
-
-
-
-            // Executa a operação PUT na tabela
-            int result1 = table_put(table, msg->entry->key ,new_block);
+            int result1 = table_put(table, msg->entry->key ,new_block); //verfica o tamanho da table antes de inserir
 
 
 
@@ -88,6 +87,7 @@ int invoke(MessageT *msg, struct table_t *table){
             }
 
             // Limpa a memória temporária
+
             block_destroy(new_block);
             printf("Comando put executado com sucesso\n");
             break;
@@ -230,7 +230,7 @@ int invoke(MessageT *msg, struct table_t *table){
             msg->opcode = MESSAGE_T__OPCODE__OP_GETTABLE + 1;
             msg->c_type = MESSAGE_T__C_TYPE__CT_TABLE;
             msg->entries = all_entries;
-            printf("Comando gettable executado com sucesso\n");
+            printf("Comando gettable executado com sucesso.  Quantidade de operações gets que serão executadas: %d\n", table_size(table));
             break;
         case MESSAGE_T__OPCODE__OP_BAD:
 

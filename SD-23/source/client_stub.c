@@ -1,3 +1,8 @@
+/* Grupo 23
+Gabriel Gameiro - 56299
+Rodrigo Antunes - 56321
+Carolina Romeira - 59867
+*/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -28,7 +33,7 @@ struct rtable_t *rtable_connect(char *address_port) {
 
     char *host = strtok(copy, ":");
     char *port_str = strtok(NULL, ":");
-
+    host = strcmp(host,"localhost") == 0? "127.0.0.1": host;
 
     printf("IP: %s\n", host);
     printf("PORTO: %s\n", port_str);

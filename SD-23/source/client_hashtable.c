@@ -1,3 +1,8 @@
+/* Grupo 23
+Gabriel Gameiro - 56299
+Rodrigo Antunes - 56321
+Carolina Romeira - 59867
+*/
 #include <stdio.h>
 #include <string.h>
 #include <signal.h>
@@ -18,7 +23,7 @@ int main(int argc, char **argv) {
     // Extrair <server> e <port> do argv[1]
     char *server_and_port = argv[1];
     if (strchr(server_and_port, ':') == NULL) { // Verifica se existe o caracter ':'
-        fprintf(stderr, "Erro: faltam : \n");
+        fprintf(stderr, "Erro: falta : \n");
         return -1;
     }
 
@@ -29,10 +34,10 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Erro ao conectar ao servidor.\n");
         return -1;
     }
-
+    printf("Comandos: \n get  <key> retorna o conteudo da chave escolhida \n put <key> <value> insere o dado na tabela com a chave pretendida \n size retorna o tamanho da tabela \n getkeys retorna todas as chaves \n gettable retorna a tabela inteira \n");
     char input[256];
     while (1) {
-        printf("Comando: ");
+        printf("Insira um Comando: ");
         if (fgets(input, sizeof(input), stdin) == NULL) {
             break;
         }
@@ -91,7 +96,7 @@ int main(int argc, char **argv) {
                 if(value==NULL){
                     printf("Dados não encontrados\n");
                 }else{
-                    printf("data: %p\n data size: %d\n", value->data, value->datasize);
+                    printf( "Data: %p\nDatasize: %d\n", value->data, value->datasize);
                 }
             } else {
                 printf("Exemplo: get <key>\n");
@@ -162,7 +167,7 @@ int main(int argc, char **argv) {
             }
             printf("Entries da Tabela:\n");
             for (int i = 0; entrys[i] != NULL; i++) {
-                printf("Entry nº %d: Key->%s | Datasize-> %d\n", i,entrys[i]->key, entrys[i]->value->datasize);
+                printf("Entry nº %d: Key->%s | Data-> %p - Datasize-> %d\n", i,entrys[i]->key, entrys[i]->value->data,entrys[i]->value->datasize);
                 entry_destroy(entrys[i]);
             }
             free(entrys);

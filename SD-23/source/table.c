@@ -14,6 +14,10 @@ Carolina Romeira - 59867
 #include "list.h"
 #include "list-private.h"
 
+
+/*
+*Função hash que agora já suporta UTF-8 
+*/
 int hash_code(char *key, int n) {
     setlocale(LC_ALL, ""); // Configura o programa para o ambiente de caracteres locais
     int total = 0;

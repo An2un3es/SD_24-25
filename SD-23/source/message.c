@@ -1,3 +1,9 @@
+/* Grupo 23
+Gabriel Gameiro - 56299
+Rodrigo Antunes - 56321
+Carolina Romeira - 59867
+*/
+
 #include <unistd.h> // para o write() e read()
 #include "message-private.h"
 /**

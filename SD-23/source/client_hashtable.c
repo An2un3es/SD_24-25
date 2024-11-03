@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Erro ao conectar ao servidor.\n");
         return -1;
     }
-    printf("Comandos: \n get  <key> retorna o conteudo da chave escolhida \n put <key> <value> insere o dado na tabela com a chave pretendida \n size retorna o tamanho da tabela \n getkeys retorna todas as chaves \n gettable retorna a tabela inteira \n");
+    printf("Comandos: \n put <key> <value> -> inserir o dado na tabela com a chave dada\n get <key> -> retornar o conteudo da chave pedida, se existir \n del <key> -> remover a entry com a chave dada da tabela\n size -> retornar o número de entrys na tabela \n getkeys -> retornar todas as chaves existentes \n gettable -> retornar todas as entrys na tabela\n quit -> encerrar ligação com o servidor\n");
     char input[256];
     while (1) {
         printf("Insira um Comando: ");
@@ -148,7 +148,12 @@ int main(int argc, char **argv) {
 
             printf("Keys da Tabela:\n");
             for (int i = 0; keys[i] != NULL; i++) {
-                printf("-> %s\n", keys[i]);
+                if (keys[i]!=NULL){
+                    printf("-> %s\n", keys[i]);
+                }else{
+                    printf("-> NULL");
+                }
+                free(keys[i]);
             }
         } else if (strcmp(command, "gettable") == 0) {
             char *badsintax = strtok(NULL, " ");

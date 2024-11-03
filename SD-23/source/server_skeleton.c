@@ -73,9 +73,8 @@ int invoke(MessageT *msg, struct table_t *table){
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
                 return -1;
             }
-            int result1 = table_put(table, msg->entry->key ,new_block); //verfica o tamanho da table antes de inserir
-
-
+            //Adiciona a entry na tabela
+            int result1 = table_put(table, msg->entry->key ,new_block);
 
             // Define a resposta com base no resultado
             if (result1 == 0) {
@@ -84,6 +83,7 @@ int invoke(MessageT *msg, struct table_t *table){
             } else {
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;  
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                return -1;
             }
 
             // Limpa a memória temporária
@@ -106,6 +106,7 @@ int invoke(MessageT *msg, struct table_t *table){
             if (block == NULL) {
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                return -1;
             }else {
 
                 msg->opcode = MESSAGE_T__OPCODE__OP_GET + 1;  
@@ -133,6 +134,7 @@ int invoke(MessageT *msg, struct table_t *table){
             } else {
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;  
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                return -1;
             }
 
             printf("Comando del executado com sucesso\n");
@@ -151,6 +153,7 @@ int invoke(MessageT *msg, struct table_t *table){
             if (result3 < 0) {
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;  
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                return -1;
             } else {
                 msg->opcode = MESSAGE_T__OPCODE__OP_SIZE + 1;  
                 msg->c_type = MESSAGE_T__C_TYPE__CT_RESULT;
@@ -173,6 +176,7 @@ int invoke(MessageT *msg, struct table_t *table){
             if (keys ==NULL) {
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;  
                 msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                return -1;
             } else {
                 msg->opcode = MESSAGE_T__OPCODE__OP_GETKEYS + 1;  
                 msg->c_type = MESSAGE_T__C_TYPE__CT_KEYS;
@@ -230,7 +234,7 @@ int invoke(MessageT *msg, struct table_t *table){
             msg->opcode = MESSAGE_T__OPCODE__OP_GETTABLE + 1;
             msg->c_type = MESSAGE_T__C_TYPE__CT_TABLE;
             msg->entries = all_entries;
-            printf("Comando gettable executado com sucesso.  Quantidade de operações gets que serão executadas: %d\n", table_size(table));
+            printf("Comando gettable executado com sucesso. Quantidade de operações gets que serão executadas: %d\n", table_size(table));
             break;
         case MESSAGE_T__OPCODE__OP_BAD:
 

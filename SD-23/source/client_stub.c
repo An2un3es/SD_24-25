@@ -310,7 +310,7 @@ char **rtable_get_keys(struct rtable_t *rtable){
     }
 
     // Alocar memória para a cópia das chaves (Verificar se não é preciso "+1")
-    char **keys = malloc((response->n_keys) * sizeof(char *));
+    char **keys = malloc(((response->n_keys)+1) * sizeof(char *));
     if (keys == NULL) {
         printf("Erro ao alocar memória para as chaves\n");
         message_t__free_unpacked(response, NULL);

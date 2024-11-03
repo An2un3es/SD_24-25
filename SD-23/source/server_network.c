@@ -154,7 +154,7 @@ int network_main_loop(int listening_socket, struct table_t *table) {
     while ((client_socket = accept(listening_socket, (struct sockaddr *)&client, &client_len)) > 0) {
         printf("Cliente conectado com sucesso.\n");
         fflush(stdout);
-        printf("Cliente pode comçar com os pedidos.\n");
+        printf("Cliente pode começar com os pedidos.\n");
         fflush(stdout);
 
         // Enquanto o cliente estiver conectado
@@ -174,14 +174,14 @@ int network_main_loop(int listening_socket, struct table_t *table) {
                 printf("Erro ao processar a mensagem.\n");
                 fflush(stdout);
                 network_send(client_socket, request_msg);
-                break;
+                continue;
             }
 
             //Enviar mensagem de resposta ao cliente
             if (network_send(client_socket, request_msg) < 0) {
                 printf("Erro ao enviar a resposta para o cliente.\n");
                 fflush(stdout);
-                break;
+                continue;
             }
             // Limpa a mensagem recebida
             if (request_msg != NULL) {

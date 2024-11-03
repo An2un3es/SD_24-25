@@ -7,24 +7,35 @@ Carolina Romeira - 59867
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
+#include <locale.h>
 #include "table.h"
 #include "table-private.h"
 #include "list.h"
 #include "list-private.h"
 
-
-
-int hash_code(char *key, int n){
-
-    int size= strlen(key);
+int hash_code(char *key, int n) {
+    setlocale(LC_ALL, ""); // Configura o programa para o ambiente de caracteres locais
     int total = 0;
-    for(int i =0; i<size;i++){
-        total+= key[i];
-        total= total % n;
+
+    wchar_t wc;
+    int bytes;
+    while (*key != '\0') {
+
+        bytes = mbtowc(&wc, key, MB_CUR_MAX);
+        if (bytes == -1) {
+            
+            return -1;
+        }
+        total += wc;
+        total = total % n;
+        
+        key += bytes; 
     }
 
     return total;
 }
+
 
 /* Função para criar e inicializar uma nova tabela hash, com n
  * linhas (n = módulo da função hash).

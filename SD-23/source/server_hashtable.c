@@ -16,13 +16,6 @@ Carolina Romeira - 59867
 #include "server_skeleton.h"
 
 
-/*
-*Segundo a forma como o professor pede para usamos a função server_network_init para criar e preparar a socket,
-*não faz sentido então usar o argumento <server> extraido do terminal ao executar o servidor,
-*visto que a função não recebe como argumento nenhum outro argumento sem ser o port.
-*/
-
-
 int main(int argc, char **argv) {
 
     signal(SIGPIPE, SIG_IGN);  // Ignorar SIGPIPE

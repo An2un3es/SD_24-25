@@ -119,7 +119,7 @@ MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg) {
         fprintf(stderr, "Erro ao receber o tamanho da resposta do servidor.\n");
         return NULL;
     }
-    size_t response_size = ntohl(response_size_network);  // Convertendo para ordem do host
+    size_t response_size = ntohl(response_size_network);  // Converter size
 
 
     // Alocar memória para a resposta e receber a mensagem completa
@@ -136,7 +136,7 @@ MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg) {
 
     // De-serializar a mensagem de resposta
     MessageT *response_msg = message_t__unpack(NULL, response_size, response_buf);
-    free(response_buf);  // Liberar a memória do buffer da resposta
+    free(response_buf);  // Libertar a memória do buffer da resposta
 
     if (response_msg == NULL) {
         fprintf(stderr, "Erro ao deserializar a resposta do servidor.\n");

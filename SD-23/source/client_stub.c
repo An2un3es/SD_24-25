@@ -72,8 +72,8 @@ int rtable_disconnect(struct rtable_t *rtable)
     if (rtable == NULL || rtable->sockfd < 0)
     {
         return -1; // Retorna -1 em caso de erro
-    } // TODO O que fazer no server? apagar tudo dps de desconectado?
-    // bota fechar o socket
+    } 
+
 
     if (network_close(rtable) == -1)
     {
@@ -81,7 +81,7 @@ int rtable_disconnect(struct rtable_t *rtable)
         return -1;
     }
     // Resetar o descritor do socket na rtable
-    rtable->sockfd = -1; //não sei quanto a necessidade disso
+    rtable->sockfd = -1; 
     free(rtable->server_address);
     free(rtable);
     return 0;

@@ -25,7 +25,7 @@ int server_network_init(short port){
     int sockfd;
     struct sockaddr_in server;
 
-    // Cria o socket TCP
+    // Criar socket TCP
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         printf("Erro ao criar o socket");
         return -1;
@@ -37,21 +37,20 @@ int server_network_init(short port){
     server.sin_addr.s_addr = INADDR_ANY; 
     server.sin_port = htons(port); 
 
-    // Faz o bind do socket ao endereço e à porta
+    // Fazer o bind do socket ao endereço e à porta
     if (bind(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0) {
         printf("Erro ao fazer o bind");
-        close(sockfd); // Fecha o socket em caso de erro
+        close(sockfd); // Fechar o socket em caso de erro
         return -1;
     }
 
-    // Coloca o socket em modo de escuta para aceitar conexões
+    // Colocar o socket em modo listen para aceitar conexões
     if (listen(sockfd, 5) < 0) {
         printf("Erro ao executar o listen");
-        close(sockfd); // Fecha o socket em caso de erro
+        close(sockfd); // Fechar o socket em caso de erro
         return -1;
     }
 
-    // Retorna o descritor do socket pronto para aceitar conexões
     return sockfd;
 }
 
@@ -70,16 +69,16 @@ MessageT *network_receive(int client_socket) {
         return NULL;
     }
 
-    size_t msg_size = ntohl(msg_size_network);  // Converter para ordem do host
+    size_t msg_size = ntohl(msg_size_network);  // Converter size
 
-    //Alocar um buffer com o tamanho exato da mensagem
+    //Alocar um buffer com o tamanho da mensagem
     uint8_t *msg_buffer = malloc(msg_size);
     if (msg_buffer == NULL) {
         fprintf(stderr, "Erro ao alocar memória para a mensagem.\n");
         return NULL;
     }
 
-    // 3. Ler a mensagem completa usando o tamanho previamente lido
+    //Ler a mensagem completa usando o tamanho previamente lido
     if (read_all(client_socket, msg_buffer, msg_size) < 0) {
         fprintf(stderr, "Erro ao ler a mensagem completa.\n");
         free(msg_buffer);
@@ -87,7 +86,7 @@ MessageT *network_receive(int client_socket) {
     }
 
 
-    // 4. Deserializar a mensagem usando Protocol Buffers
+    //Deserializar a mensagem
     MessageT *message = message_t__unpack(NULL, msg_size, msg_buffer);
     free(msg_buffer);  // Libertar o buffer após a deserialização
     if (message == NULL) {
@@ -116,7 +115,7 @@ int network_send(int client_socket, MessageT *msg) {
 
     message_t__pack(msg, msg_serialized);
 
-uint32_t msg_size_network = htonl(msg_size);
+    uint32_t msg_size_network = htonl(msg_size);
     if (write_all(client_socket, &msg_size_network, sizeof(msg_size_network)) < 0) {
         printf( "Erro ao enviar o tamanho da mensagem.\n");
         free(msg_serialized);
@@ -174,14 +173,14 @@ int network_main_loop(int listening_socket, struct table_t *table) {
                 printf("Erro ao processar a mensagem.\n");
                 fflush(stdout);
                 network_send(client_socket, request_msg);
-                continue;
+                continue; // Continuar avisando que houve erro
             }
 
             //Enviar mensagem de resposta ao cliente
             if (network_send(client_socket, request_msg) < 0) {
                 printf("Erro ao enviar a resposta para o cliente.\n");
                 fflush(stdout);
-                continue;
+                continue; // Continuar avisando que houve erro
             }
             // Limpa a mensagem recebida
             if (request_msg != NULL) {
@@ -190,7 +189,7 @@ int network_main_loop(int listening_socket, struct table_t *table) {
         
         }
 
-        // Fecha a conexão após o cliente encerrar ou em caso de erro
+        // Fecha a conexão após o cliente encerrar
         close(client_socket);
         printf("Conexão com cliente encerrada.\n");
         fflush(stdout);
@@ -207,6 +206,6 @@ int network_main_loop(int listening_socket, struct table_t *table) {
 */
 int server_network_close(int socket){
     printf("Desconectando...");
-    return (socket <0 || close(socket)<0)? -1:0 ; //mais  simples
+    return (socket <0 || close(socket)<0)? -1:0 ;
 }
 

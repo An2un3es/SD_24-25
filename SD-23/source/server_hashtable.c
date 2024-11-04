@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
         fflush(stdout);
         return -1;
     }
-    //Provavelmente é qaqui que começa a concorrencia 
+    //Provavelmente é qaqui que começa a concorrencia na prox fase
 
 
     // Entrar no loop principal para processar as conexões

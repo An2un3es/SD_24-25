@@ -63,7 +63,6 @@ int invoke(MessageT *msg, struct table_t *table){
             }
             
             // Criar um novo block com key e value
-            
             struct block_t *new_block = block_create(msg->entry->value.len, "");
             new_block->data = malloc(msg->entry->value.len);
             memcpy(new_block->data, msg->entry->value.data, msg->entry->value.len);
@@ -87,7 +86,6 @@ int invoke(MessageT *msg, struct table_t *table){
             }
 
             // Limpa a memória temporária
-
             block_destroy(new_block);
             printf("Comando put executado com sucesso\n");
             break;
@@ -213,7 +211,7 @@ int invoke(MessageT *msg, struct table_t *table){
                         if (converted_entry != NULL) {
                             all_entries[msg->n_entries++] = converted_entry;
                         } else {
-                            // Liberar memória no caso de erro e retornar -1
+                            
                             for (int k = 0; k < msg->n_entries; k++) {
                                 free(all_entries[k]->key);
                                 free(all_entries[k]->value.data);
@@ -229,7 +227,7 @@ int invoke(MessageT *msg, struct table_t *table){
                 }
             }
 
-            all_entries[msg->n_entries] = NULL;  // Terminar com `NULL`
+            all_entries[msg->n_entries] = NULL;  // Terminar com NULL
 
             msg->opcode = MESSAGE_T__OPCODE__OP_GETTABLE + 1;
             msg->c_type = MESSAGE_T__C_TYPE__CT_TABLE;
@@ -265,18 +263,18 @@ int invoke(MessageT *msg, struct table_t *table){
 
 
 /*
-* "Conver--te" entry_y para EntryT
+* "Converte" entry_y para EntryT
 */
 EntryT *convert_to_entry_t(struct entry_t *entry) {
     if (entry == NULL) return NULL;
 
-    // Alocar `EntryT` na heap
+    // Alocar EntryT 
     EntryT *entry_t = malloc(sizeof(EntryT));
     if (entry_t == NULL) {
         return NULL;
     }
 
-    // Inicializar `EntryT`
+    // Inicializar EntryT
     entry_t__init(entry_t);
 
     // Copiar a chave
@@ -286,7 +284,7 @@ EntryT *convert_to_entry_t(struct entry_t *entry) {
         return NULL;
     }
 
-    // Configurar `value` com `len` e alocar espaço para `data`
+    // Configurar value com len e alocar espaço para data
     entry_t->value.len = entry->value->datasize;
     entry_t->value.data = malloc(entry->value->datasize);
     if (entry_t->value.data == NULL) {

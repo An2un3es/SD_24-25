@@ -22,13 +22,13 @@ int main(int argc, char **argv) {
 
     // Extrair <server> e <port> do argv[1]
     char *server_and_port = argv[1];
-    if (strchr(server_and_port, ':') == NULL) { // Verifica se existe o caracter ':'
+    if (strchr(server_and_port, ':') == NULL) { // Verifica se existe ':'
         fprintf(stderr, "Erro: falta : \n");
         return -1;
     }
 
 
-    // Inicializar a tabela remota (estrutura rtable_t)
+    // Inicializar a tabela 
     struct rtable_t *rtable = rtable_connect(server_and_port);
     if (rtable == NULL) {
         fprintf(stderr, "Erro ao conectar ao servidor.\n");
@@ -155,6 +155,8 @@ int main(int argc, char **argv) {
                 }
                 free(keys[i]);
             }
+
+        //----------------------------------------------
         } else if (strcmp(command, "gettable") == 0) {
             char *badsintax = strtok(NULL, " ");
             if (badsintax){

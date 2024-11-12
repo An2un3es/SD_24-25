@@ -9,6 +9,7 @@ Carolina Romeira - 59867
 #include <stdlib.h>
 #include "client_stub.h"
 #include "message-private.h"
+#include "stats.h"
 
 int main(int argc, char **argv) {
 
@@ -178,6 +179,27 @@ int main(int argc, char **argv) {
                 entry_destroy(entrys[i]);
             }
             free(entrys);
+
+
+        }else if(strcmp(command, "stats") == 0){
+            char *badsintax = strtok(NULL, " ");
+            if (badsintax){
+                 printf("Uso: stats\n");
+                 continue;
+            }
+
+            struct statistics_t* stats=rtable_stats(rtable);
+            if (stats == NULL) {
+                printf("Erro ao conseguir estatisticas.\n");
+                continue;
+            }
+
+            //falta o tempo
+            printf("Estatisticas na tabela:\n Número total de operações executadas-> %d\n Tempo gasto em operações-> %d\n Número de clientes ligados-> %d", stats->n_op,stats->active_clients);
+            
+
+            free(stats); // não sei se vai ser assim ou não
+
             
         } else if (strcmp(command, "quit") == 0) {
             break;

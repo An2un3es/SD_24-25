@@ -18,6 +18,9 @@ Carolina Romeira - 59867
 #include "server_skeleton.h"
 #include "server_network.h"
 
+// Variável global 
+static struct table_t *global_table;
+
 /* Função de atendimento para cada cliente */
 void *client_handler(void *client_socket) {
     int connsockfd = *((int *) client_socket);
@@ -30,7 +33,7 @@ void *client_handler(void *client_socket) {
     MessageT *request_msg;
     while ((request_msg = network_receive(connsockfd)) != NULL) {  // Aguarda requisição
         // Processa a mensagem usando invoke (skeleton)
-        if (invoke(request_msg, NULL) < 0) {  // Aqui, substitua NULL pela tabela se necessário
+        if (invoke(request_msg, global_table) < 0) {  // Aqui, substitua NULL pela tabela se necessário
             printf("Erro ao processar a mensagem.\n");
             fflush(stdout);
             network_send(connsockfd, request_msg);  // Envia uma resposta de erro
@@ -186,6 +189,7 @@ na tabela table;
 int network_main_loop(int listening_socket, struct table_t *table) {
     struct sockaddr_in client;
     socklen_t client_len = sizeof(client);
+    global_table = table;  // Define a tabela global
     int *client_socket;
 
     printf("Servidor à espera de ligações\n");

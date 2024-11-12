@@ -11,10 +11,51 @@ Carolina Romeira - 59867
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>  
 #include "table.h"
 #include "htmessages.pb-c.h"
 #include "message-private.h"
 #include "server_skeleton.h"
+#include "server_network.h"
+
+/* Função de atendimento para cada cliente */
+void *client_handler(void *client_socket) {
+    int connsockfd = *((int *) client_socket);
+    free(client_socket);
+
+    printf("Cliente conectado com sucesso.\nCliente pode começar com os pedidos.\n");
+    fflush(stdout);
+
+    // Loop de atendimento ao cliente
+    MessageT *request_msg;
+    while ((request_msg = network_receive(connsockfd)) != NULL) {  // Aguarda requisição
+        // Processa a mensagem usando invoke (skeleton)
+        if (invoke(request_msg, NULL) < 0) {  // Aqui, substitua NULL pela tabela se necessário
+            printf("Erro ao processar a mensagem.\n");
+            fflush(stdout);
+            network_send(connsockfd, request_msg);  // Envia uma resposta de erro
+            continue;
+        }
+
+        // Envia a resposta para o cliente
+        if (network_send(connsockfd, request_msg) < 0) {
+            printf("Erro ao enviar a resposta para o cliente.\n");
+            fflush(stdout);
+            break;
+        }
+
+        // Limpa a mensagem recebida
+        if (request_msg != NULL) {
+            message_t__free_unpacked(request_msg, NULL);
+        }
+    }
+
+    // Fecha a conexão ao final do atendimento
+    close(connsockfd);
+    printf("Conexão com cliente encerrada.\n");
+    fflush(stdout);
+    pthread_exit(NULL);  // Termina a thread
+}
 
 /* Função para preparar um socket de receção de pedidos de ligação
 * num determinado porto.
@@ -145,60 +186,39 @@ na tabela table;
 int network_main_loop(int listening_socket, struct table_t *table) {
     struct sockaddr_in client;
     socklen_t client_len = sizeof(client);
-    int client_socket;
+    int *client_socket;
 
     printf("Servidor à espera de ligações\n");
     fflush(stdout);
 
-    while ((client_socket = accept(listening_socket, (struct sockaddr *)&client, &client_len)) > 0) {
-        printf("Cliente conectado com sucesso.\n");
-        fflush(stdout);
-        printf("Cliente pode começar com os pedidos.\n");
-        fflush(stdout);
-
-        // Enquanto o cliente estiver conectado
-        while (1) {
-
-            MessageT *request_msg = network_receive(client_socket);
-
-            // Se a mensagem não foi recebida corretamente, ou o cliente fechou a conexão
-            if (request_msg == NULL) {
-                printf("Cliente desconectado ou erro ao receber a mensagem.\n");
-                fflush(stdout);
-                break; // Sair do loop interno para encerrar a conexão
-            }
-
-            // Processa a mensagem no skeleton
-            if (invoke(request_msg, table) < 0) {
-                printf("Erro ao processar a mensagem.\n");
-                fflush(stdout);
-                network_send(client_socket, request_msg);
-                continue; // Continuar avisando que houve erro
-            }
-
-            //Enviar mensagem de resposta ao cliente
-            if (network_send(client_socket, request_msg) < 0) {
-                printf("Erro ao enviar a resposta para o cliente.\n");
-                fflush(stdout);
-                continue; // Continuar avisando que houve erro
-            }
-            // Limpa a mensagem recebida
-            if (request_msg != NULL) {
-                message_t__free_unpacked(request_msg, NULL);
-            }
-        
+    while (1) {
+        client_socket = malloc(sizeof(int));  // Aloca memória para o socket do cliente
+        if (client_socket == NULL) {
+            perror("Erro ao alocar memória para o socket do cliente.");
+            continue;
         }
 
-        // Fecha a conexão após o cliente encerrar
-        close(client_socket);
-        printf("Conexão com cliente encerrada.\n");
-        fflush(stdout);
+        *client_socket = accept(listening_socket, (struct sockaddr *)&client, &client_len);
+        if (*client_socket < 0) {
+            perror("Erro ao aceitar conexão");
+            free(client_socket);
+            continue;
+        }
+
+        // Cria uma nova thread para atender o cliente
+        pthread_t client_thread;
+        if (pthread_create(&client_thread, NULL, client_handler, client_socket) != 0) {
+            perror("Erro ao criar thread do cliente");
+            close(*client_socket);
+            free(client_socket);
+            continue;
+        }
+
+        pthread_detach(client_thread);  // Deixa a thread se limpar automaticamente após terminar
     }
 
     return -1;
 }
-
-
 
 /* Liberta os recursos alocados por server_network_init(), nomeadamente
 * fechando o socket passado como argumento.
@@ -208,4 +228,3 @@ int server_network_close(int socket){
     printf("Desconectando...");
     return (socket <0 || close(socket)<0)? -1:0 ;
 }
-

@@ -4,9 +4,9 @@
 
 struct statistics_t{
 
-    int n_op;
-    //total_time;
-    int active_clients;
+    uint64_t total_operations;      
+    uint64_t total_time;
+    uint32_t connected_clients;
 };
 
 #endif

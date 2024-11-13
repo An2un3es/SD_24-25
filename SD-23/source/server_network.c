@@ -22,11 +22,6 @@ Carolina Romeira - 59867
 // Variavel global para a tabela
 static struct table_t *global_table;
 
-// Variável global para as estatísticas do servidor e um mutex para controle de acesso
-static struct statistics_t server_stats;
-static pthread_mutex_t stats_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-
 /* Função de atendimento para cada cliente */
 void *client_handler(void *client_socket) {
     int connsockfd = *((int *) client_socket);
@@ -36,15 +31,14 @@ void *client_handler(void *client_socket) {
     fflush(stdout);
 
     // Incrementar o contador de clientes 
-    pthread_mutex_lock(&stats_mutex);
+    pthread_mutex_lock(&server_stats.stats_mutex);
     server_stats.connected_clients++;
-    pthread_mutex_unlock(&stats_mutex);
+    pthread_mutex_unlock(&server_stats.stats_mutex);
 
     // Loop de atendimento ao cliente
     MessageT *request_msg;
     while ((request_msg = network_receive(connsockfd)) != NULL) {  
-        struct timeval start, end;
-        gettimeofday(&start, NULL);
+        
 
         if (invoke(request_msg, global_table) < 0) {  
             printf("Erro ao processar a mensagem.\n");
@@ -52,16 +46,6 @@ void *client_handler(void *client_socket) {
             network_send(connsockfd, request_msg); 
             continue;
         }
-
-        gettimeofday(&end, NULL);
-        
-        // Calcula o tempo da operação e atualiza as estatísticas
-        uint64_t op_time = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
-
-        pthread_mutex_lock(&stats_mutex);
-        server_stats.total_operations++;      // Incrementar operações
-        server_stats.total_time += op_time; //  Tempo
-        pthread_mutex_unlock(&stats_mutex);
 
         // Envia a resposta para o cliente
         if (network_send(connsockfd, request_msg) < 0) {
@@ -77,9 +61,9 @@ void *client_handler(void *client_socket) {
     }
 
     // Decrementar o contador de clientes 
-    pthread_mutex_lock(&stats_mutex);
+    pthread_mutex_lock(&server_stats.stats_mutex);
     server_stats.connected_clients--;
-    pthread_mutex_unlock(&stats_mutex);
+    pthread_mutex_unlock(&server_stats.stats_mutex);
 
     // Fecha a conexão ao final do atendimento
     close(connsockfd);

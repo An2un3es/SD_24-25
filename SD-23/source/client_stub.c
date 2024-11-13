@@ -11,6 +11,7 @@ Carolina Romeira - 59867
 #include "client_stub-private.h"
 #include "client_network.h"
 #include "htmessages.pb-c.h"
+#include "stats.h"
 
 
 /* Função para estabelecer uma associação entre o cliente e o servidor,
@@ -438,5 +439,42 @@ void rtable_free_entries(struct entry_t **entries){
 /* Obtém as estatísticas do servidor. */
 struct statistics_t *rtable_stats(struct rtable_t *rtable){
 
-    
+    MessageT msg;
+    message_t__init(&msg);
+    msg.opcode=MESSAGE_T__OPCODE__OP_STATS;
+    msg.c_type=MESSAGE_T__C_TYPE__CT_NONE;
+
+    MessageT *response = network_send_receive(rtable, &msg);
+    if (response == NULL) {
+        printf("Erro ao enviar/receber mensagem\n");
+        return NULL;
+    }
+
+    // Verificar se a mensagem de resposta é uma mensagem de erro
+    if (response->opcode == MESSAGE_T__OPCODE__OP_ERROR && response->c_type == MESSAGE_T__C_TYPE__CT_NONE) {
+        printf("Mensagem de ERRO recebida\n");
+        message_t__free_unpacked(response, NULL);
+        return NULL;
+    }
+
+    // Verificar se veio a resposta esperada
+    if (response->opcode != MESSAGE_T__OPCODE__OP_STATS + 1 || response->c_type != MESSAGE_T__C_TYPE__CT_STATS) {
+        printf("Resposta do servidor não foi a esperada\n");
+        message_t__free_unpacked(response, NULL);
+        return NULL;
+    }
+
+    // Alocar e preencher `statistics_t`
+    struct statistics_t *stats = malloc(sizeof(struct statistics_t));
+    if (stats == NULL) {
+        printf("Erro de memória.\n");
+        return NULL;
+    }
+    stats->total_operations = response->stats->total_ops;
+    stats->total_time = response->stats->total_time;
+    stats->connected_clients = response->stats->active_clients;
+
+    // Libertar a memória da resposta
+    message_t__free_unpacked(response, NULL);
+    return stats;
 }

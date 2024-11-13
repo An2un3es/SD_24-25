@@ -6,12 +6,16 @@ Carolina Romeira - 59867
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include "table.h"
 #include "table-private.h"
 #include "list.h"
 #include "list-private.h"
 #include "htmessages.pb-c.h"
 #include "block.h"
+#include "stats.h"
+
+statistics_t server_stats;
 
 EntryT *convert_to_entry_t(struct entry_t *entry);
 
@@ -29,6 +33,13 @@ struct table_t *server_skeleton_init(int n_lists){
     if(table==NULL)
         return NULL;
     
+
+    // Inicializar os campos de server_stats
+    server_stats.total_operations = 0;
+    server_stats.total_time = 0;
+    server_stats.connected_clients = 0;
+    pthread_mutex_init(&server_stats.stats_mutex, NULL); // Inicializar o mutex
+
     return table;
 }
 
@@ -41,6 +52,9 @@ int server_skeleton_destroy(struct table_t *table){
 
     table_destroy(table);
 
+    // Destruir o mutex de server_stats
+    pthread_mutex_destroy(&server_stats.stats_mutex);
+
     return 0;
 }
 
@@ -51,6 +65,9 @@ int invoke(MessageT *msg, struct table_t *table){
     if (msg==NULL || table==NULL){
         return -1;
     }
+
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
     
     switch (msg->opcode)
     {
@@ -74,6 +91,7 @@ int invoke(MessageT *msg, struct table_t *table){
             }
             //Adiciona a entry na tabela
             int result1 = table_put(table, msg->entry->key ,new_block);
+            gettimeofday(&end, NULL);
 
             // Define a resposta com base no resultado
             if (result1 == 0) {
@@ -88,7 +106,7 @@ int invoke(MessageT *msg, struct table_t *table){
             // Limpa a memória temporária
             block_destroy(new_block);
             printf("Comando put executado com sucesso\n");
-            //NUMERO DE  OPERAÇÕES AUMENTA
+            
             break;
         
         case MESSAGE_T__OPCODE__OP_GET:
@@ -101,6 +119,7 @@ int invoke(MessageT *msg, struct table_t *table){
 
             // Executa a operação Get na tabela
             struct block_t *block = table_get(table, msg->key);
+            gettimeofday(&end, NULL);
 
             if (block == NULL) {
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
@@ -114,7 +133,6 @@ int invoke(MessageT *msg, struct table_t *table){
                 msg->value.data = block->data;
             }
             printf("Comando get executado com sucesso\n");
-            //NUMERO DE  OPERAÇÕES AUMENTA
             break;
 
         case MESSAGE_T__OPCODE__OP_DEL:
@@ -127,6 +145,7 @@ int invoke(MessageT *msg, struct table_t *table){
 
             // Executa a operação Del na tabela
             int result2 = table_remove(table, msg->key);
+            gettimeofday(&end, NULL);
 
             if (result2 == 0) {
                 msg->opcode = MESSAGE_T__OPCODE__OP_DEL + 1;  
@@ -138,7 +157,7 @@ int invoke(MessageT *msg, struct table_t *table){
             }
 
             printf("Comando del executado com sucesso\n");
-            //NUMERO DE  OPERAÇÕES AUMENTA
+
             break;
         case MESSAGE_T__OPCODE__OP_SIZE:
 
@@ -150,6 +169,7 @@ int invoke(MessageT *msg, struct table_t *table){
 
             // Executa a operação Size na tabela
             int result3 = table_size(table);
+            gettimeofday(&end, NULL);
 
             if (result3 < 0) {
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;  
@@ -174,6 +194,7 @@ int invoke(MessageT *msg, struct table_t *table){
 
             // Executa a operação GetKeys na tabela
             char **keys = table_get_keys(table);
+            gettimeofday(&end, NULL);
 
             if (keys ==NULL) {
                 msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;  
@@ -238,7 +259,8 @@ int invoke(MessageT *msg, struct table_t *table){
             msg->c_type = MESSAGE_T__C_TYPE__CT_TABLE;
             msg->entries = all_entries;
             printf("Comando gettable executado com sucesso. Quantidade de operações gets que serão executadas: %d\n", table_size(table));
-            //NUMERO DE  OPERAÇÕES AUMENTA
+
+            gettimeofday(&end, NULL);
             break;
 
         case MESSAGE_T__OPCODE__OP_STATS:
@@ -249,8 +271,27 @@ int invoke(MessageT *msg, struct table_t *table){
                 return -1;
             }
 
+            // Alocar e inicializar msg->stats
+            msg->stats = malloc(sizeof(StatsT));
+            if (msg->stats == NULL) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                return -1;
+            }
+            stats_t__init(msg->stats);
 
-            break;
+            // Bloquear o mutex e preencher os dados de stats
+            pthread_mutex_lock(&server_stats.stats_mutex);
+            msg->stats->total_ops = server_stats.total_operations;
+            msg->stats->total_time = server_stats.total_time;
+            msg->stats->active_clients = server_stats.connected_clients;
+            pthread_mutex_unlock(&server_stats.stats_mutex);
+
+            msg->opcode = MESSAGE_T__OPCODE__OP_STATS + 1;
+            msg->c_type = MESSAGE_T__C_TYPE__CT_STATS;
+
+            printf("Comando stats executado com sucesso\n");
+            return 0;
         
         case MESSAGE_T__OPCODE__OP_BAD:
 
@@ -272,6 +313,14 @@ int invoke(MessageT *msg, struct table_t *table){
 
             return -1;
     }
+
+    // Calcula o tempo da operação e atualiza as estatísticas
+    uint64_t op_time = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
+
+    pthread_mutex_lock(&server_stats.stats_mutex);
+    server_stats.total_operations++;      // Incrementar operações
+    server_stats.total_time += op_time; //  Tempo
+    pthread_mutex_unlock(&server_stats.stats_mutex);
 
 
     return 0; 

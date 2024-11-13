@@ -12,6 +12,7 @@
         "message-private.h": "c",
         "functional": "c",
         "optional": "c",
-        "concepts": "c"
+        "concepts": "c",
+        "stats.h": "c"
     }
 }

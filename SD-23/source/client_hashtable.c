@@ -7,9 +7,11 @@ Carolina Romeira - 59867
 #include <string.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <inttypes.h>
 #include "client_stub.h"
 #include "message-private.h"
 #include "stats.h"
+
 
 int main(int argc, char **argv) {
 
@@ -35,7 +37,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Erro ao conectar ao servidor.\n");
         return -1;
     }
-    printf("Comandos: \n put <key> <value> -> inserir o dado na tabela com a chave dada\n get <key> -> retornar o conteudo da chave pedida, se existir \n del <key> -> remover a entry com a chave dada da tabela\n size -> retornar o número de entrys na tabela \n getkeys -> retornar todas as chaves existentes \n gettable -> retornar todas as entrys na tabela\n quit -> encerrar ligação com o servidor\n");
+    printf("Comandos: \n put <key> <value> -> inserir o dado na tabela com a chave dada\n get <key> -> retornar o conteudo da chave pedida, se existir \n del <key> -> remover a entry com a chave dada da tabela\n size -> retornar o número de entrys na tabela \n getkeys -> retornar todas as chaves existentes \n gettable -> retornar todas as entrys na tabela\n stats -> obter estatisticas do servidor\n quit -> encerrar ligação com o servidor\n");
     char input[256];
     while (1) {
         printf("Insira um Comando: ");
@@ -194,11 +196,10 @@ int main(int argc, char **argv) {
                 continue;
             }
 
-            //falta o tempo
-            printf("Estatisticas na tabela:\n Número total de operações executadas-> %d\n Tempo gasto em operações-> %d\n Número de clientes ligados-> %d", stats->n_op,stats->active_clients);
+            printf("Estatisticas na tabela:\n Número total de operações executadas-> %u\n Tempo gasto em operações-> %lld microssegundos\n Número de clientes ligados-> %u\n", stats->total_operations,stats->total_time,stats->connected_clients);
             
 
-            free(stats); // não sei se vai ser assim ou não
+            free(stats);
 
             
         } else if (strcmp(command, "quit") == 0) {

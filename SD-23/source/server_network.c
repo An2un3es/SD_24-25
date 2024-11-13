@@ -17,28 +17,51 @@ Carolina Romeira - 59867
 #include "message-private.h"
 #include "server_skeleton.h"
 #include "server_network.h"
+#include "stats.h"
 
-// Variável global 
+// Variavel global para a tabela
 static struct table_t *global_table;
+
+// Variável global para as estatísticas do servidor e um mutex para controle de acesso
+static struct statistics_t server_stats;
+static pthread_mutex_t stats_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 
 /* Função de atendimento para cada cliente */
 void *client_handler(void *client_socket) {
     int connsockfd = *((int *) client_socket);
     free(client_socket);
 
-    printf("Cliente conectado com sucesso.\nCliente pode começar com os pedidos.\n");
+    printf("Cliente conectado com sucesso.\n");
     fflush(stdout);
+
+    // Incrementar o contador de clientes 
+    pthread_mutex_lock(&stats_mutex);
+    server_stats.connected_clients++;
+    pthread_mutex_unlock(&stats_mutex);
 
     // Loop de atendimento ao cliente
     MessageT *request_msg;
-    while ((request_msg = network_receive(connsockfd)) != NULL) {  // Aguarda requisição
-        // Processa a mensagem usando invoke (skeleton)
-        if (invoke(request_msg, global_table) < 0) {  // Aqui, substitua NULL pela tabela se necessário
+    while ((request_msg = network_receive(connsockfd)) != NULL) {  
+        struct timeval start, end;
+        gettimeofday(&start, NULL);
+
+        if (invoke(request_msg, global_table) < 0) {  
             printf("Erro ao processar a mensagem.\n");
             fflush(stdout);
-            network_send(connsockfd, request_msg);  // Envia uma resposta de erro
+            network_send(connsockfd, request_msg); 
             continue;
         }
+
+        gettimeofday(&end, NULL);
+        
+        // Calcula o tempo da operação e atualiza as estatísticas
+        uint64_t op_time = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
+
+        pthread_mutex_lock(&stats_mutex);
+        server_stats.total_operations++;      // Incrementar operações
+        server_stats.total_time += op_time; //  Tempo
+        pthread_mutex_unlock(&stats_mutex);
 
         // Envia a resposta para o cliente
         if (network_send(connsockfd, request_msg) < 0) {
@@ -52,6 +75,11 @@ void *client_handler(void *client_socket) {
             message_t__free_unpacked(request_msg, NULL);
         }
     }
+
+    // Decrementar o contador de clientes 
+    pthread_mutex_lock(&stats_mutex);
+    server_stats.connected_clients--;
+    pthread_mutex_unlock(&stats_mutex);
 
     // Fecha a conexão ao final do atendimento
     close(connsockfd);
@@ -189,7 +217,7 @@ na tabela table;
 int network_main_loop(int listening_socket, struct table_t *table) {
     struct sockaddr_in client;
     socklen_t client_len = sizeof(client);
-    global_table = table;  // Define a tabela global
+    global_table = table; 
     int *client_socket;
 
     printf("Servidor à espera de ligações\n");

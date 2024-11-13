@@ -88,6 +88,7 @@ int invoke(MessageT *msg, struct table_t *table){
             // Limpa a memória temporária
             block_destroy(new_block);
             printf("Comando put executado com sucesso\n");
+            //NUMERO DE  OPERAÇÕES AUMENTA
             break;
         
         case MESSAGE_T__OPCODE__OP_GET:
@@ -113,6 +114,7 @@ int invoke(MessageT *msg, struct table_t *table){
                 msg->value.data = block->data;
             }
             printf("Comando get executado com sucesso\n");
+            //NUMERO DE  OPERAÇÕES AUMENTA
             break;
 
         case MESSAGE_T__OPCODE__OP_DEL:
@@ -136,6 +138,7 @@ int invoke(MessageT *msg, struct table_t *table){
             }
 
             printf("Comando del executado com sucesso\n");
+            //NUMERO DE  OPERAÇÕES AUMENTA
             break;
         case MESSAGE_T__OPCODE__OP_SIZE:
 
@@ -158,6 +161,7 @@ int invoke(MessageT *msg, struct table_t *table){
                 msg->result=result3;
             }
             printf("Comando size executado com sucesso\n");
+            //NUMERO DE  OPERAÇÕES AUMENTA
             break;
 
         case MESSAGE_T__OPCODE__OP_GETKEYS:
@@ -182,6 +186,7 @@ int invoke(MessageT *msg, struct table_t *table){
                 msg-> n_keys = table_size(table);
             }
             printf("Comando getkeys executado com sucesso\n");
+            //NUMERO DE  OPERAÇÕES AUMENTA
             break;
         case MESSAGE_T__OPCODE__OP_GETTABLE:
 
@@ -233,7 +238,20 @@ int invoke(MessageT *msg, struct table_t *table){
             msg->c_type = MESSAGE_T__C_TYPE__CT_TABLE;
             msg->entries = all_entries;
             printf("Comando gettable executado com sucesso. Quantidade de operações gets que serão executadas: %d\n", table_size(table));
+            //NUMERO DE  OPERAÇÕES AUMENTA
             break;
+
+        case MESSAGE_T__OPCODE__OP_STATS:
+
+            if (msg->c_type != MESSAGE_T__C_TYPE__CT_NONE) {
+                msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+                msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                return -1;
+            }
+
+
+            break;
+        
         case MESSAGE_T__OPCODE__OP_BAD:
 
             msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;

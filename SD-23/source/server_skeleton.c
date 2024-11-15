@@ -261,6 +261,9 @@ int invoke(MessageT *msg, struct table_t *table){
             printf("Comando gettable executado com sucesso. Quantidade de operações gets que serão executadas: %d\n", table_size(table));
 
             gettimeofday(&end, NULL);
+            pthread_mutex_lock(&server_stats.stats_mutex);
+            server_stats.total_operations-=total_entries;      // decerementar operações
+            pthread_mutex_unlock(&server_stats.stats_mutex);
             break;
 
         case MESSAGE_T__OPCODE__OP_STATS:

@@ -17,7 +17,7 @@ Carolina Romeira - 59867
 #include "message-private.h"
 #include "server_skeleton.h"
 #include "server_network.h"
-#include "stats.h"
+#include "stats-private.h"
 
 // Variavel global para a tabela
 static struct table_t *global_table;

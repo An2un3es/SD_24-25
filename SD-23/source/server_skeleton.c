@@ -13,7 +13,7 @@ Carolina Romeira - 59867
 #include "list-private.h"
 #include "htmessages.pb-c.h"
 #include "block.h"
-#include "stats.h"
+#include "stats-private.h"
 
 statistics_t server_stats;
 

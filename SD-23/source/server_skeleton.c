@@ -181,7 +181,7 @@ int invoke(MessageT *msg, struct table_t *table){
                 msg->result=result3;
             }
             printf("Comando size executado com sucesso\n");
-            //NUMERO DE  OPERAÇÕES AUMENTA
+
             break;
 
         case MESSAGE_T__OPCODE__OP_GETKEYS:
@@ -207,7 +207,7 @@ int invoke(MessageT *msg, struct table_t *table){
                 msg-> n_keys = table_size(table);
             }
             printf("Comando getkeys executado com sucesso\n");
-            //NUMERO DE  OPERAÇÕES AUMENTA
+
             break;
         case MESSAGE_T__OPCODE__OP_GETTABLE:
 
@@ -262,7 +262,7 @@ int invoke(MessageT *msg, struct table_t *table){
 
             gettimeofday(&end, NULL);
             pthread_mutex_lock(&server_stats.stats_mutex);
-            server_stats.total_operations-=total_entries;      // decerementar operações
+            server_stats.total_operations-=total_entries;      // diminuir operações em gettable por causa dos gets
             pthread_mutex_unlock(&server_stats.stats_mutex);
             break;
 
@@ -317,7 +317,7 @@ int invoke(MessageT *msg, struct table_t *table){
             return -1;
     }
 
-    // Calcula o tempo da operação e atualiza as estatísticas
+    // Calcular o tempo da operação e atualizar as estatísticas
     uint64_t op_time = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
 
     pthread_mutex_lock(&server_stats.stats_mutex);

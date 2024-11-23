@@ -253,7 +253,7 @@ int network_main_loop(int listening_socket, struct table_t *table)
 int server_network_close(int socket)
 {
     server_skeleton_destroy(global_table);
-    printf("Desconectando...");
+    printf("\nDesconectando...");
     if (socket < 0 || close(socket) < 0)
         return 1;
     return 0;

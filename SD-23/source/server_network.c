@@ -26,8 +26,7 @@ static struct table_t *global_table;
 void *client_handler(void *client_socket)
 {
     int connsockfd = *((int *)client_socket);
-    free(client_socket);
-
+  
     printf("Cliente conectado com sucesso.\n");
     fflush(stdout);
 
@@ -217,35 +216,27 @@ int network_main_loop(int listening_socket, struct table_t *table)
     struct sockaddr_in client;
     socklen_t client_len = sizeof(client);
     global_table = table;
-    int *client_socket;
+    int client_socket;
 
     printf("Servidor à espera de ligações\n");
     fflush(stdout);
 
     while (1)
     {
-        client_socket = malloc(sizeof(int)); // Aloca memória para o socket do cliente
-        if (client_socket == NULL)
-        {
-            perror("Erro ao alocar memória para o socket do cliente.");
-            continue;
-        }
-
-        *client_socket = accept(listening_socket, (struct sockaddr *)&client, &client_len);
-        if (*client_socket < 0)
+        client_socket = accept(listening_socket, (struct sockaddr *)&client, &client_len);
+        if (client_socket < 0)
         {
             perror("Erro ao aceitar conexão");
-            free(client_socket);
+            
             continue;
         }
 
         // Cria uma nova thread para atender o cliente
         pthread_t client_thread;
-        if (pthread_create(&client_thread, NULL, client_handler, client_socket) != 0)
+        if (pthread_create(&client_thread, NULL, client_handler, &client_socket) != 0)
         {
             perror("Erro ao criar thread do cliente");
-            close(*client_socket);
-            free(client_socket);
+            close(client_socket);
             continue;
         }
 

@@ -308,11 +308,11 @@ static const ProtobufCEnumValue message_t__c_type__enum_values_by_number[9] =
   { "CT_RESULT", "MESSAGE_T__C_TYPE__CT_RESULT", 40 },
   { "CT_KEYS", "MESSAGE_T__C_TYPE__CT_KEYS", 50 },
   { "CT_TABLE", "MESSAGE_T__C_TYPE__CT_TABLE", 60 },
-  { "CT_STATS", "MESSAGE_T__C_TYPE__CT_STATS", 70 },
-  { "CT_NONE", "MESSAGE_T__C_TYPE__CT_NONE", 80 },
+  { "CT_STATS", "MESSAGE_T__C_TYPE__CT_STATS", 80 },
+  { "CT_NONE", "MESSAGE_T__C_TYPE__CT_NONE", 90 },
 };
 static const ProtobufCIntRange message_t__c_type__value_ranges[] = {
-{0, 0},{10, 1},{20, 2},{30, 3},{40, 4},{50, 5},{60, 6},{70, 7},{80, 8},{0, 9}
+{0, 0},{10, 1},{20, 2},{30, 3},{40, 4},{50, 5},{60, 6},{80, 7},{90, 8},{0, 9}
 };
 static const ProtobufCEnumValueIndex message_t__c_type__enum_values_by_name[9] =
 {

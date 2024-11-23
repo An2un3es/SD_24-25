@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "htmessages.pb-c.h": "c"
+        "htmessages.pb-c.h": "c",
+        "list": "c"
     }
 }

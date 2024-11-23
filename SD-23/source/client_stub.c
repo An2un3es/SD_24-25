@@ -305,7 +305,7 @@ char **rtable_get_keys(struct rtable_t *rtable){
 
     // Verificar se veio a resposta esperada
     if (response->opcode != MESSAGE_T__OPCODE__OP_GETKEYS + 1 || response->c_type != MESSAGE_T__C_TYPE__CT_KEYS) {
-        printf("Resposta do servidor não foi a esperada\n");
+        printf("Resposta do servidor não foi a esperada\n %d", response->opcode);
         message_t__free_unpacked(response, NULL);
         return NULL;
     }

@@ -35,8 +35,8 @@ message message_t       /* Formato da mensagem MessageT */
     CT_RESULT = 40;
     CT_KEYS = 50;
     CT_TABLE = 60;
-    CT_STATS = 70;  // Novo c_type para conteúdo de estatísticas
-    CT_NONE = 80;
+    CT_STATS = 80;  // Novo c_type para conteúdo de estatísticas
+    CT_NONE = 90;
     }
 
 /* Campos disponíveis na mensagem genérica (cada mensagem concreta, de

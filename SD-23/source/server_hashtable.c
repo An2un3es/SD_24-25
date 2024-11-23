@@ -15,12 +15,15 @@ Carolina Romeira - 59867
 #include "server_network.h"
 #include "server_skeleton.h"
 
-
+int listening_socket;
+void closeServer(){
+    server_network_close(listening_socket);
+    exit(0);
+}
 int main(int argc, char **argv) {
 
     signal(SIGPIPE, SIG_IGN);  // Ignorar SIGPIPE
-
-
+    signal(SIGINT, closeServer);  // Ignorar SIGPIPE
 
     // Verifica se foi passado algum argumento
     if (argc != 3) {
@@ -54,7 +57,7 @@ int main(int argc, char **argv) {
     }
 
     // Inicializar o servidor (criar socket de escuta)
-    int listening_socket = server_network_init(port);
+    listening_socket = server_network_init(port);
     if (listening_socket < 0) {
         printf("Erro ao inicializar a rede do servidor");
         fflush(stdout);

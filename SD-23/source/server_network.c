@@ -11,7 +11,7 @@ Carolina Romeira - 59867
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>  
+#include <pthread.h>
 #include "table.h"
 #include "htmessages.pb-c.h"
 #include "message-private.h"
@@ -23,44 +23,48 @@ Carolina Romeira - 59867
 static struct table_t *global_table;
 
 /* Função de atendimento para cada cliente */
-void *client_handler(void *client_socket) {
-    int connsockfd = *((int *) client_socket);
+void *client_handler(void *client_socket)
+{
+    int connsockfd = *((int *)client_socket);
     free(client_socket);
 
     printf("Cliente conectado com sucesso.\n");
     fflush(stdout);
 
-    // Incrementar o contador de clientes 
+    // Incrementar o contador de clientes
     pthread_mutex_lock(&server_stats.stats_mutex);
     server_stats.connected_clients++;
     pthread_mutex_unlock(&server_stats.stats_mutex);
 
     // Loop de atendimento ao cliente
     MessageT *request_msg;
-    while ((request_msg = network_receive(connsockfd)) != NULL) {  
-        
+    while ((request_msg = network_receive(connsockfd)) != NULL)
+    {
 
-        if (invoke(request_msg, global_table) < 0) {  
+        if (invoke(request_msg, global_table) < 0)
+        {
             printf("Erro ao processar a mensagem.\n");
             fflush(stdout);
-            network_send(connsockfd, request_msg); 
+            network_send(connsockfd, request_msg);
             continue;
         }
 
         // Envia a resposta para o cliente
-        if (network_send(connsockfd, request_msg) < 0) {
+        if (network_send(connsockfd, request_msg) < 0)
+        {
             printf("Erro ao enviar a resposta para o cliente.\n");
             fflush(stdout);
             break;
         }
 
         // Limpa a mensagem recebida
-        if (request_msg != NULL) {
+        if (request_msg != NULL)
+        {
             message_t__free_unpacked(request_msg, NULL);
         }
     }
 
-    // Decrementar o contador de clientes 
+    // Decrementar o contador de clientes
     pthread_mutex_lock(&server_stats.stats_mutex);
     server_stats.connected_clients--;
     pthread_mutex_unlock(&server_stats.stats_mutex);
@@ -69,39 +73,43 @@ void *client_handler(void *client_socket) {
     close(connsockfd);
     printf("Conexão com cliente encerrada.\n");
     fflush(stdout);
-    pthread_exit(NULL);  // Termina a thread
+    pthread_exit(NULL); // Termina a thread
 }
 
 /* Função para preparar um socket de receção de pedidos de ligação
-* num determinado porto.
-* Retorna o descritor do socket ou -1 em caso de erro.
-*/
-int server_network_init(short port){
+ * num determinado porto.
+ * Retorna o descritor do socket ou -1 em caso de erro.
+ */
+int server_network_init(short port)
+{
 
     int sockfd;
     struct sockaddr_in server;
 
     // Criar socket TCP
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
         printf("Erro ao criar o socket");
         return -1;
     }
 
     // Preenche a estrutura server para o bind
-    memset(&server, 0, sizeof(server)); 
+    memset(&server, 0, sizeof(server));
     server.sin_family = AF_INET;
-    server.sin_addr.s_addr = INADDR_ANY; 
-    server.sin_port = htons(port); 
+    server.sin_addr.s_addr = INADDR_ANY;
+    server.sin_port = htons(port);
 
     // Fazer o bind do socket ao endereço e à porta
-    if (bind(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0) {
+    if (bind(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0)
+    {
         printf("Erro ao fazer o bind");
         close(sockfd); // Fechar o socket em caso de erro
         return -1;
     }
 
     // Colocar o socket em modo listen para aceitar conexões
-    if (listen(sockfd, 5) < 0) {
+    if (listen(sockfd, 5) < 0)
+    {
         printf("Erro ao executar o listen");
         close(sockfd); // Fechar o socket em caso de erro
         return -1;
@@ -111,60 +119,64 @@ int server_network_init(short port){
 }
 
 /* A função network_receive() deve:
-* - Ler os bytes da rede, a partir do client_socket indicado;
-* - De-serializar estes bytes e construir a mensagem com o pedido,
-* reservando a memória necessária para a estrutura MessageT.
-* Retorna a mensagem com o pedido ou NULL em caso de erro.
-*/
-MessageT *network_receive(int client_socket) {
+ * - Ler os bytes da rede, a partir do client_socket indicado;
+ * - De-serializar estes bytes e construir a mensagem com o pedido,
+ * reservando a memória necessária para a estrutura MessageT.
+ * Retorna a mensagem com o pedido ou NULL em caso de erro.
+ */
+MessageT *network_receive(int client_socket)
+{
 
-    //Ler o tamanho da mensagem
+    // Ler o tamanho da mensagem
     uint32_t msg_size_network;
-    if (read_all(client_socket, &msg_size_network, sizeof(msg_size_network)) < 0) {
+    if (read_all(client_socket, &msg_size_network, sizeof(msg_size_network)) < 0)
+    {
         fprintf(stderr, "Erro ao ler o tamanho da mensagem.\n");
         return NULL;
     }
 
-    size_t msg_size = ntohl(msg_size_network);  // Converter size
+    size_t msg_size = ntohl(msg_size_network); // Converter size
 
-    //Alocar um buffer com o tamanho da mensagem
+    // Alocar um buffer com o tamanho da mensagem
     uint8_t *msg_buffer = malloc(msg_size);
-    if (msg_buffer == NULL) {
+    if (msg_buffer == NULL)
+    {
         fprintf(stderr, "Erro ao alocar memória para a mensagem.\n");
         return NULL;
     }
 
-    //Ler a mensagem completa usando o tamanho previamente lido
-    if (read_all(client_socket, msg_buffer, msg_size) < 0) {
+    // Ler a mensagem completa usando o tamanho previamente lido
+    if (read_all(client_socket, msg_buffer, msg_size) < 0)
+    {
         fprintf(stderr, "Erro ao ler a mensagem completa.\n");
         free(msg_buffer);
         return NULL;
     }
 
-
-    //Deserializar a mensagem
+    // Deserializar a mensagem
     MessageT *message = message_t__unpack(NULL, msg_size, msg_buffer);
-    free(msg_buffer);  // Libertar o buffer após a deserialização
-    if (message == NULL) {
-        printf( "Erro ao de-serializar a mensagem.\n");
+    free(msg_buffer); // Libertar o buffer após a deserialização
+    if (message == NULL)
+    {
+        printf("Erro ao de-serializar a mensagem.\n");
         return NULL;
     }
 
     return message;
 }
 
-
-
 /* A função network_send() deve:
-* - Serializar a mensagem de resposta contida em msg;
-* - Enviar a mensagem serializada, através do client_socket.
-* Retorna 0 (OK) ou -1 em caso de erro.
-*/
-int network_send(int client_socket, MessageT *msg) {
-    
+ * - Serializar a mensagem de resposta contida em msg;
+ * - Enviar a mensagem serializada, através do client_socket.
+ * Retorna 0 (OK) ou -1 em caso de erro.
+ */
+int network_send(int client_socket, MessageT *msg)
+{
+
     size_t msg_size = message_t__get_packed_size(msg);
     uint8_t *msg_serialized = malloc(msg_size);
-    if (msg_serialized == NULL) {
+    if (msg_serialized == NULL)
+    {
         printf("Erro ao alocar memória para a resposta.\n");
         return -1;
     }
@@ -172,14 +184,16 @@ int network_send(int client_socket, MessageT *msg) {
     message_t__pack(msg, msg_serialized);
 
     uint32_t msg_size_network = htonl(msg_size);
-    if (write_all(client_socket, &msg_size_network, sizeof(msg_size_network)) < 0) {
-        printf( "Erro ao enviar o tamanho da mensagem.\n");
+    if (write_all(client_socket, &msg_size_network, sizeof(msg_size_network)) < 0)
+    {
+        printf("Erro ao enviar o tamanho da mensagem.\n");
         free(msg_serialized);
         return -1;
-    } 
+    }
 
-    if (write_all(client_socket, msg_serialized, msg_size) < 0) {
-        printf( "Erro ao enviar a mensagem ao cliente.\n");
+    if (write_all(client_socket, msg_serialized, msg_size) < 0)
+    {
+        printf("Erro ao enviar a mensagem ao cliente.\n");
         free(msg_serialized);
         return -1;
     }
@@ -189,7 +203,7 @@ int network_send(int client_socket, MessageT *msg) {
 }
 
 /* A função network_main_loop() deve:
-* - Aceitar uma conexão de um cliente; 
+* - Aceitar uma conexão de um cliente;
 * - Receber uma mensagem usando a função network_receive;
 * - Entregar a mensagem de-serializada ao skeleton para ser processada
 na tabela table;
@@ -198,24 +212,28 @@ na tabela table;
 * A função não deve retornar, a menos que ocorra algum erro. Nesse
 * caso retorna -1.
 */
-int network_main_loop(int listening_socket, struct table_t *table) {
+int network_main_loop(int listening_socket, struct table_t *table)
+{
     struct sockaddr_in client;
     socklen_t client_len = sizeof(client);
-    global_table = table; 
+    global_table = table;
     int *client_socket;
 
     printf("Servidor à espera de ligações\n");
     fflush(stdout);
 
-    while (1) {
-        client_socket = malloc(sizeof(int));  // Aloca memória para o socket do cliente
-        if (client_socket == NULL) {
+    while (1)
+    {
+        client_socket = malloc(sizeof(int)); // Aloca memória para o socket do cliente
+        if (client_socket == NULL)
+        {
             perror("Erro ao alocar memória para o socket do cliente.");
             continue;
         }
 
         *client_socket = accept(listening_socket, (struct sockaddr *)&client, &client_len);
-        if (*client_socket < 0) {
+        if (*client_socket < 0)
+        {
             perror("Erro ao aceitar conexão");
             free(client_socket);
             continue;
@@ -223,24 +241,29 @@ int network_main_loop(int listening_socket, struct table_t *table) {
 
         // Cria uma nova thread para atender o cliente
         pthread_t client_thread;
-        if (pthread_create(&client_thread, NULL, client_handler, client_socket) != 0) {
+        if (pthread_create(&client_thread, NULL, client_handler, client_socket) != 0)
+        {
             perror("Erro ao criar thread do cliente");
             close(*client_socket);
             free(client_socket);
             continue;
         }
 
-        pthread_detach(client_thread);  // Deixa a thread se limpar automaticamente após terminar
+        pthread_detach(client_thread); // Deixa a thread se limpar automaticamente após terminar
     }
 
     return -1;
 }
 
 /* Liberta os recursos alocados por server_network_init(), nomeadamente
-* fechando o socket passado como argumento.
-* Retorna 0 (OK) ou -1 em caso de erro.
-*/
-int server_network_close(int socket){
+ * fechando o socket passado como argumento.
+ * Retorna 0 (OK) ou -1 em caso de erro.
+ */
+int server_network_close(int socket)
+{
+    server_skeleton_destroy(global_table);
     printf("Desconectando...");
-    return (socket <0 || close(socket)<0)? -1:0 ;
+    if (socket < 0 || close(socket) < 0)
+        return 1;
+    return 0;
 }

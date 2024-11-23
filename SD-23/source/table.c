@@ -128,14 +128,11 @@ struct block_t *table_get(struct table_t *t, char *key){
     
     int index = hash_code(key,t->size);
     struct list_t *list= t->lists[index];
-
     struct entry_t *entry_real =list_get(list,key);
-    struct entry_t *entry_copia = entry_duplicate(entry_real);
-    
-    if(entry_copia==NULL)
+    if(entry_real==NULL)
         return NULL;
-    
-    return entry_copia->value;
+    struct block_t* b = block_duplicate(entry_real->value);
+    return b;
 
 }
 /* Função que conta o número de entries na tabela passada como argumento.
@@ -256,7 +253,7 @@ int table_destroy(struct table_t *t){
         struct list_t * lista =t->lists[i];
         list_destroy(lista);
     }
-
+    free(t->lists);
     free(t);
     return 0;
 

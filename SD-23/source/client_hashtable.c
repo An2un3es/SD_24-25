@@ -196,7 +196,7 @@ int main(int argc, char **argv) {
                 continue;
             }
 
-            printf("Estatisticas na tabela:\n Número total de operações executadas-> %u\n Tempo gasto em operações-> %lld microssegundos\n Número de clientes ligados-> %u\n", stats->total_operations,stats->total_time,stats->connected_clients);
+            printf("Estatisticas na tabela:\n Número total de operações executadas-> %u\n Tempo gasto em operações-> %lu microssegundos\n Número de clientes ligados-> %u\n", stats->total_operations,stats->total_time,stats->connected_clients);
             
 
             free(stats);

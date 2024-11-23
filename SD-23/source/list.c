@@ -214,9 +214,10 @@ int list_remove(struct list_t *l, char *key){
     if(current_node == NULL){
         return 1;
         }
-    if(strcmp( l->head->entry->key,key)==0){
+    if(strcmp( l->head->entry->key,key)==0){ //se for na cabeca
             next= l->head->next;
             entry_destroy( l->head->entry);
+            free(l->head);
             l->head=next;
             l->size--;
             return 0;
@@ -224,10 +225,11 @@ int list_remove(struct list_t *l, char *key){
 
     while(current_node ->next!=NULL){
         
-        if(strcmp(current_node->next->entry->key,key)==0){
+        if(strcmp(current_node->next->entry->key,key)==0){ //se for no corpo
 
             next=current_node->next->next;
             entry_destroy(current_node->next->entry);
+            free(current_node->next);
             current_node->next=next;
             l->size--;
             return 0;

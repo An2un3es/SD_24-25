@@ -25,7 +25,7 @@ static struct table_t *global_table;
 /* Função de atendimento para cada cliente */
 void *client_handler(void *client_socket)
 {
-    int connsockfd = *((int *)client_socket);
+    int connection_socket = *((int *)client_socket);
   
     printf("Cliente conectado com sucesso.\n");
     fflush(stdout);
@@ -37,19 +37,19 @@ void *client_handler(void *client_socket)
 
     // Loop de atendimento ao cliente
     MessageT *request_msg;
-    while ((request_msg = network_receive(connsockfd)) != NULL)
+    while (server_running &&(request_msg = network_receive(connection_socket)) != NULL)
     {
 
         if (invoke(request_msg, global_table) < 0)
         {
             printf("Erro ao processar a mensagem.\n");
             fflush(stdout);
-            network_send(connsockfd, request_msg);
+            network_send(connection_socket, request_msg);
             continue;
         }
 
         // Envia a resposta para o cliente
-        if (network_send(connsockfd, request_msg) < 0)
+        if (network_send(connection_socket, request_msg) < 0)
         {
             printf("Erro ao enviar a resposta para o cliente.\n");
             fflush(stdout);
@@ -69,7 +69,7 @@ void *client_handler(void *client_socket)
     pthread_mutex_unlock(&server_stats.stats_mutex);
 
     // Fecha a conexão ao final do atendimento
-    close(connsockfd);
+    close(connection_socket);
     printf("Conexão com cliente encerrada.\n");
     fflush(stdout);
     pthread_exit(NULL); // Termina a thread
@@ -81,7 +81,6 @@ void *client_handler(void *client_socket)
  */
 int server_network_init(short port)
 {
-
     int sockfd;
     struct sockaddr_in server;
 
@@ -217,7 +216,7 @@ int network_main_loop(int listening_socket, struct table_t *table)
     socklen_t client_len = sizeof(client);
     global_table = table;
     int client_socket;
-
+    printf("Servidor inicializado com sucesso, para desligar servidor: ^C\n");
     printf("Servidor à espera de ligações\n");
     fflush(stdout);
 
@@ -253,7 +252,7 @@ int network_main_loop(int listening_socket, struct table_t *table)
 int server_network_close(int socket)
 {
     server_skeleton_destroy(global_table);
-    printf("\nDesconectando...");
+    printf("\nDesconectando...\n");
     if (socket < 0 || close(socket) < 0)
         return 1;
     return 0;

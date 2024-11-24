@@ -37,7 +37,7 @@ void *client_handler(void *client_socket)
 
     // Loop de atendimento ao cliente
     MessageT *request_msg;
-    while (server_running &&(request_msg = network_receive(connection_socket)) != NULL)
+    while ((request_msg = network_receive(connection_socket)) != NULL)
     {
 
         if (invoke(request_msg, global_table) < 0)

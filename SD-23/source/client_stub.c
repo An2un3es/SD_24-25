@@ -133,7 +133,8 @@ int rtable_put(struct rtable_t *rtable, struct entry_t *entry){
 
     // Libertar a memória da resposta
     message_t__free_unpacked(response, NULL);
-
+    free(entry->value);
+    free(entry);
     return 0;
 }
 

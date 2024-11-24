@@ -83,6 +83,7 @@ int main(int argc, char **argv) {
                 }
 
                 int result = rtable_put(rtable, entry);
+               
                 printf("put: %s\n", result == 0 ? "sucesso" : "falhou");
                 free(value_copy);
 
@@ -100,6 +101,7 @@ int main(int argc, char **argv) {
                     printf("Dados não encontrados\n");
                 }else{
                     printf( "Data: %p\nDatasize: %d\n", value->data, value->datasize);
+                    block_destroy(value);
                 }
             } else {
                 printf("Exemplo: get <key>\n");
@@ -156,8 +158,8 @@ int main(int argc, char **argv) {
                 }else{
                     printf("-> NULL");
                 }
-                free(keys[i]);
             }
+            rtable_free_keys(keys);
 
         //----------------------------------------------
         } else if (strcmp(command, "gettable") == 0) {
@@ -178,9 +180,9 @@ int main(int argc, char **argv) {
             printf("Entries da Tabela:\n");
             for (int i = 0; entrys[i] != NULL; i++) {
                 printf("Entry nº %d: Key->%s | Data-> %p - Datasize-> %d\n", i,entrys[i]->key, entrys[i]->value->data,entrys[i]->value->datasize);
-                entry_destroy(entrys[i]);
+                
             }
-            free(entrys);
+            rtable_free_entries(entrys);
 
 
         }else if(strcmp(command, "stats") == 0){
@@ -196,7 +198,7 @@ int main(int argc, char **argv) {
                 continue;
             }
 
-            printf("Estatisticas na tabela:\n Número total de operações executadas-> %u\n Tempo gasto em operações-> %llu microssegundos\n Número de clientes ligados-> %u\n", stats->total_operations,stats->total_time,stats->connected_clients);
+            printf("Estatisticas na tabela:\n Número total de operações executadas-> %u\n Tempo gasto em operações-> %lu microssegundos\n Número de clientes ligados-> %u\n", stats->total_operations,stats->total_time,stats->connected_clients);
             
 
             free(stats);

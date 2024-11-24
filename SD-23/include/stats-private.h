@@ -1,3 +1,8 @@
+/* Grupo 23
+Gabriel Gameiro - 56299
+Rodrigo Antunes - 56321
+Carolina Romeira - 59867
+*/
 #ifndef _STATS_PRIVATE_H
 #define _STATS_PRIVATE_H /* Módulo STATS_PRIVATE_H */
 

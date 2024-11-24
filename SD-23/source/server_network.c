@@ -63,12 +63,12 @@ void *client_handler(void *client_socket)
         }
     }
 
-    // Decrementar o contador de clientes
+    // Diminuir o contador de clientes
     pthread_mutex_lock(&server_stats.stats_mutex);
     server_stats.connected_clients--;
     pthread_mutex_unlock(&server_stats.stats_mutex);
 
-    // Fecha a conexão ao final do atendimento
+    // Fechar a conexão ao final do atendimento
     close(connection_socket);
     printf("Conexão com cliente encerrada.\n");
     fflush(stdout);
@@ -91,7 +91,7 @@ int server_network_init(short port)
         return -1;
     }
 
-    // Preenche a estrutura server para o bind
+    // Preencher a estrutura server para o bind
     memset(&server, 0, sizeof(server));
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;

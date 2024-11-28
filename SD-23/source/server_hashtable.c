@@ -14,6 +14,7 @@ Carolina Romeira - 59867
 #include "htmessages.pb-c.h"
 #include "server_network.h"
 #include "server_skeleton.h"
+#include "client_stub.h"
 
 int listening_socket;
 void closeServer(){
@@ -28,13 +29,22 @@ int main(int argc, char **argv) {
     // Verifica se foi passado algum argumento
     if (argc != 3) {
         printf("Erro ao iniciar servidor\n");
-        printf("Exemplo de uso: %s <server>:<port> <n_lists> \n", argv[0]);
+        printf("Exemplo de uso: %s <zookeeper:port> <server>:<port> <n_lists> \n", argv[0]);
         return -1;
     }
 
 
     // Extrair <server> e <port> do argv[1]
-    char *server_and_port = argv[1];
+    char *zoo_server_and_port= argv[1];
+    char *zoo_ip = strtok(zoo_server_and_port, ":");
+    char *zoo_port = strtok(NULL, ":");
+
+    if (zoo_ip == NULL || zoo_port == NULL) {
+        fprintf(stderr, "Erro: O formato esperado é <Zoo_ip>:<Zoo_port>\n");
+        return -1;
+    }
+
+    char *server_and_port = argv[2];
     char *server_ip = strtok(server_and_port, ":");
     char *port_str = strtok(NULL, ":");
 
@@ -47,7 +57,7 @@ int main(int argc, char **argv) {
 
 
     //criar tabela com n_listas pedidas
-    int n_listas = atoi(argv[2]);
+    int n_listas = atoi(argv[3]);
     struct table_t *table =server_skeleton_init(n_listas);
 
     if(table==NULL){

@@ -13,6 +13,7 @@
         "functional": "c",
         "optional": "c",
         "concepts": "c",
-        "stats.h": "c"
+        "stats.h": "c",
+        "zookeeper.h": "c"
     }
 }

@@ -14,8 +14,10 @@ typedef struct String_vector zoo_string;
 */
 void my_watcher_func(zhandle_t *zzh, int type, int state, const char *path, void *watcherCtx);
 
+void create_node_chain(zhandle_t *zzh);
+
 char *extract_node_name(char *path);
 
-char ** get_nodes_before_after(struct String_vector *strings, char** array, char* compare);
+void get_nodes_before_after(struct String_vector *strings, char** array, char* compare);
 
 

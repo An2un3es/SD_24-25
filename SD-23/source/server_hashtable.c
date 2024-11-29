@@ -17,6 +17,28 @@ Carolina Romeira - 59867
 #include "client_stub.h"
 #include "zookeeper_usage.h"
 
+#define ZDATALEN 1024 * 1024
+
+static char *watcher_ctx = "ZooKeeper Data Watcher";
+
+
+/**
+* Data Watcher function for /MyData node
+*/
+static void child_watcher(zhandle_t *wzh, int type, int state, const char *zpath, void *watcher_ctx) {
+	zoo_string* children_list =	(zoo_string *) malloc(sizeof(zoo_string));
+	int zoo_data_len = ZDATALEN;
+	if (state == ZOO_CONNECTED_STATE)	 {
+		if (type == ZOO_CHILD_EVENT) {
+	 	   /* Get the updated children and reset the watch */ 
+ 			if (ZOK != zoo_wget_children(wzh, "/chain", child_watcher, watcher_ctx, children_list)) {
+ 				fprintf(stderr, "Error setting watch at %s!\n", "/chain");
+ 			}
+		 } 
+	 }
+	 free(children_list);
+}
+
 
 
 int listening_socket;
@@ -101,31 +123,28 @@ int main(int argc, char **argv) {
                 fprintf(stderr, "/chain não existe! \
                     A criar nó /chain \n");
 
-                char node_path[120] = "";
-                strcat(node_path,"/chain");
-                int new_path_len = 1024;
-                char* new_path = malloc (new_path_len); 
-                zoo_create(zh, node_path, NULL, 0, & ZOO_OPEN_ACL_UNSAFE, 0, new_path, new_path_len);
-                free (new_path);
+        create_node_chain(zh);
     }
 
     int new_path_len = 1024;
     char* new_path = malloc (new_path_len); 
     zoo_create(zh, "/chain/node", NULL, 0, & ZOO_OPEN_ACL_UNSAFE, ZOO_EPHEMERAL | ZOO_SEQUENCE, new_path, new_path_len);
     //temos que fazer com que o servidor guarde o new_path
-    
 
 
     zoo_string* children_list =	(zoo_string *) malloc(sizeof(zoo_string));
-    zoo_get_children(zh, "/chain", 0, children_list);
-    //AQUI PODEMOS CHAMAR UMA FUNÇÃO QUE VEERIFICA LOGO SE EXISTEM NÓS AANTERIORES E POSTERIORES
-    char **array = malloc(2 * sizeof(char *));
+    if (ZOK != zoo_wget_children(zh, "/chain", child_watcher, watcher_ctx, children_list)) {
+				fprintf(stderr, "Error setting watch at %s!\n", "/chain");
+			}
 
+    
+    char **array = malloc(2 * sizeof(char *));
     //obter nome do nó para encontrar o antecessor e posterior
     char* node_name=extract_node_name(new_path);
     get_nodes_before_after(children_list, array, node_name);
     free (new_path);
 
+    //guardar os valores de array[0] e array[1]  
 
 
 

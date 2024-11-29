@@ -15,6 +15,7 @@
         "concepts": "c",
         "stats.h": "c",
         "zookeeper.h": "c",
-        "zookeeper_usage.h": "c"
+        "zookeeper_usage.h": "c",
+        "socket.h": "c"
     }
 }

@@ -113,15 +113,18 @@ int main(int argc, char **argv) {
     char* new_path = malloc (new_path_len); 
     zoo_create(zh, "/chain/node", NULL, 0, & ZOO_OPEN_ACL_UNSAFE, ZOO_EPHEMERAL | ZOO_SEQUENCE, new_path, new_path_len);
     //temos que fazer com que o servidor guarde o new_path
-    free (new_path);
+    
 
 
     zoo_string* children_list =	(zoo_string *) malloc(sizeof(zoo_string));
     zoo_get_children(zh, "/chain", 0, children_list);
     //AQUI PODEMOS CHAMAR UMA FUNÇÃO QUE VEERIFICA LOGO SE EXISTEM NÓS AANTERIORES E POSTERIORES
     char **array = malloc(2 * sizeof(char *));
-    get_nodes_before_after(children_list, array, new_path);
 
+    //obter nome do nó para encontrar o antecessor e posterior
+    char* node_name=extract_node_name(new_path);
+    get_nodes_before_after(children_list, array, node_name);
+    free (new_path);
 
 
 

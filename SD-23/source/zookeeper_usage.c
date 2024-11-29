@@ -9,6 +9,20 @@
 void my_watcher_func(zhandle_t *zzh, int type, int state, const char *path, void *watcherCtx) {}
 
 
+char *extract_node_name(char *path) {
+    if (path == NULL) {
+        return NULL;
+    }
+
+    const char *last_slash = strrchr(path, '/');
+    if (last_slash == NULL) {
+        return NULL;
+    }
+
+    // Retornar o nome do nó (após a último /)
+    return strdup(last_slash + 1); 
+}
+
 char ** get_nodes_before_after(struct String_vector *strings, char** array, char* compare){
 
     if (strings == NULL || strings->count == 0 || compare == NULL) {

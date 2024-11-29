@@ -116,6 +116,17 @@ int main(int argc, char **argv) {
     free (new_path);
 
 
+    zoo_string* children_list =	(zoo_string *) malloc(sizeof(zoo_string));
+    zoo_get_children(zh, "/chain", 0, children_list);
+    //AQUI PODEMOS CHAMAR UMA FUNÇÃO QUE VEERIFICA LOGO SE EXISTEM NÓS AANTERIORES E POSTERIORES
+    char **array = malloc(2 * sizeof(char *));
+    get_nodes_before_after(children_list, array, new_path);
+
+
+
+
+
+
     // Entrar no loop principal para processar as conexões
     if (network_main_loop(listening_socket, table) < 0) {
         printf("Erro no loop de rede");

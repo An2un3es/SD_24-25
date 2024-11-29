@@ -15,6 +15,9 @@ Carolina Romeira - 59867
 #include "server_network.h"
 #include "server_skeleton.h"
 #include "client_stub.h"
+#include "zookeeper_usage.h"
+
+
 
 int listening_socket;
 void closeServer(){
@@ -27,9 +30,9 @@ int main(int argc, char **argv) {
     signal(SIGINT, closeServer);  // Ignorar SIGPIPE
 
     // Verifica se foi passado algum argumento
-    if (argc != 3) {
+    if (argc != 4) {
         printf("Erro ao iniciar servidor\n");
-        printf("Exemplo de uso: %s <zookeeper:port> <server>:<port> <n_lists> \n", argv[0]);
+        printf("Exemplo de uso: %s <zookeeper_ip:zookeeper_port> <server>:<port> <n_lists> \n", argv[0]);
         return -1;
     }
 
@@ -37,12 +40,14 @@ int main(int argc, char **argv) {
     // Extrair <server> e <port> do argv[1]
     char *zoo_server_and_port= argv[1];
     char *zoo_ip = strtok(zoo_server_and_port, ":");
-    char *zoo_port = strtok(NULL, ":");
+    char *zoo_port_str = strtok(NULL, ":");
 
-    if (zoo_ip == NULL || zoo_port == NULL) {
+    if (zoo_ip == NULL || zoo_port_str == NULL) {
         fprintf(stderr, "Erro: O formato esperado é <Zoo_ip>:<Zoo_port>\n");
         return -1;
     }
+
+    int zoo_port = atoi(zoo_port_str);
 
     char *server_and_port = argv[2];
     char *server_ip = strtok(server_and_port, ":");
@@ -73,7 +78,42 @@ int main(int argc, char **argv) {
         fflush(stdout);
         return -1;
     }
-    //Provavelmente é qaqui que começa a concorrencia na prox fase
+
+    /*
+
+
+    AQUI TEM QUE SER FEITA A LIGAÇÃO COM O ZOOKEEPER
+
+
+    */
+
+    
+    struct zhandle_t* zh =zookeeper_init(zoo_server_and_port, my_watcher_func,2000, 0, NULL, 0);
+
+    if (zh == NULL)	{
+        fprintf(stderr, "Erro ao conectar ao servidor Zookeeper!\n");
+        exit(EXIT_FAILURE);
+     }
+   
+    sleep(1);
+
+    if (ZNONODE == zoo_exists(zh, "/chain", 0, NULL)) {
+                fprintf(stderr, "/chain não existe! \
+                    A criar nó /chain \n");
+
+                char node_path[120] = "";
+                strcat(node_path,"/chain");
+                int new_path_len = 1024;
+                char* new_path = malloc (new_path_len); 
+                zoo_create(zh, node_path, NULL, 0, & ZOO_OPEN_ACL_UNSAFE, 0, new_path, new_path_len);
+                free (new_path);
+    }
+
+    int new_path_len = 1024;
+    char* new_path = malloc (new_path_len); 
+    zoo_create(zh, "/chain/node", NULL, 0, & ZOO_OPEN_ACL_UNSAFE, ZOO_EPHEMERAL | ZOO_SEQUENCE, new_path, new_path_len);
+    //temos que fazer com que o servidor guarde o new_path
+    free (new_path);
 
 
     // Entrar no loop principal para processar as conexões

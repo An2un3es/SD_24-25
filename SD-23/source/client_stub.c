@@ -479,3 +479,56 @@ struct statistics_t *rtable_stats(struct rtable_t *rtable){
     message_t__free_unpacked(response, NULL);
     return stats;
 }
+
+struct rtable_pair_t *rtable_init(const char *zookeeper_address) {
+    
+    struct rtable_pair_t *rtable_pair = malloc(sizeof(struct rtable_pair_t));
+    if (rtable_pair == NULL) {
+        fprintf(stderr, "Erro ao alocar memória para rtable_pair.\n");
+        return NULL;
+    }
+
+    // Conectar ao ZooKeeper
+    if (zookeeper_connect(zookeeper_address) != 0) {
+        fprintf(stderr, "Erro ao conectar ao ZooKeeper.\n");
+        free(rtable_pair);
+        return NULL;
+    }
+
+    // Obter endereços do head e tail a partir do ZooKeeper
+    char *head_address = NULL;
+    char *tail_address = NULL;
+    if (get_head_and_tail_addresses(&head_address, &tail_address) != 0) {
+        fprintf(stderr, "Erro ao obter endereços head e tail do ZooKeeper.\n");
+        free(rtable_pair);
+        return NULL;
+    }
+
+    // Conectar ao servidor head
+    rtable_pair->head = rtable_connect(head_address);
+    if (rtable_pair->head == NULL) {
+        fprintf(stderr, "Erro ao conectar ao servidor head (%s).\n", head_address);
+        free(head_address);
+        free(tail_address);
+        free(rtable_pair);
+        return NULL;
+    }
+
+    // Conectar ao servidor tail
+    rtable_pair->tail = rtable_connect(tail_address);
+    if (rtable_pair->tail == NULL) {
+        fprintf(stderr, "Erro ao conectar ao servidor tail (%s).\n", tail_address);
+        rtable_disconnect(rtable_pair->head);
+        free(rtable_pair->head);
+        free(head_address);
+        free(tail_address);
+        free(rtable_pair);
+        return NULL;
+    }
+
+    // Libera endereços temporários
+    free(head_address);
+    free(tail_address);
+
+    return rtable_pair;
+}

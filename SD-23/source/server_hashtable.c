@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
     /*
 
 
-    AQUI TEM QUE SER FEITA A LIGAÇÃO COM O ZOOKEEPER
+    ZOOKEEPER COMEÇA AQUI
 
 
     */
@@ -147,6 +147,13 @@ int main(int argc, char **argv) {
     //guardar os valores de array[0] e array[1]  
 
 
+    /*
+
+
+    ZOOKEEPER ACABOU AQUI
+
+
+    */
 
 
     // Entrar no loop principal para processar as conexões

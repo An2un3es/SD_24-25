@@ -9,34 +9,32 @@ Carolina Romeira - 59867
 #include <stdlib.h>
 #include <inttypes.h>
 #include "client_stub.h"
+#include "client_stub-private.h"
 #include "message-private.h"
 #include "stats.h"
+#include <zookeeper/zookeeper.h>
 
 
 int main(int argc, char **argv) {
 
     signal(SIGPIPE, SIG_IGN);  // Ignorar SIGPIPE
 
-    if (argc != 2) {
-        printf("Erro ao iniciar o cliente\n");
-        printf("Exemplo de uso: %s <server>:<port> \n", argv[0]);
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <zookeeper_address>\n", argv[0]);
         return -1;
     }
 
-    // Extrair <server> e <port> do argv[1]
-    char *server_and_port = argv[1];
-    if (strchr(server_and_port, ':') == NULL) { // Verifica se existe ':'
-        fprintf(stderr, "Erro: falta : \n");
+    const char *zookeeper_address = argv[1];
+
+
+    // Inicializar conexão ao ZooKeeper e servidores head/tail
+    struct rtable_pair_t *rtable_pair = rtable_init(zookeeper_address);
+    if (rtable_pair == NULL) {
+        fprintf(stderr, "Erro ao inicializar rtable_pair (head/tail).\n");
         return -1;
     }
 
 
-    // Inicializar a tabela 
-    struct rtable_t *rtable = rtable_connect(server_and_port);
-    if (rtable == NULL) {
-        fprintf(stderr, "Erro ao conectar ao servidor.\n");
-        return -1;
-    }
     printf("Comandos: \n put <key> <value> -> inserir o dado na tabela com a chave dada\n get <key> -> retornar o conteudo da chave pedida, se existir \n del <key> -> remover a entry com a chave dada da tabela\n size -> retornar o número de entrys na tabela \n getkeys -> retornar todas as chaves existentes \n gettable -> retornar todas as entrys na tabela\n stats -> obter estatisticas do servidor\n quit -> encerrar ligação com o servidor\n");
     char input[256];
     while (1) {
@@ -82,7 +80,7 @@ int main(int argc, char **argv) {
                     continue; 
                 }
 
-                int result = rtable_put(rtable, entry);
+                int result = rtable_put(rtable_pair->head, entry);
                
                 printf("put: %s\n", result == 0 ? "sucesso" : "falhou");
                 free(value_copy);
@@ -96,7 +94,7 @@ int main(int argc, char **argv) {
         } else if (strcmp(command, "get") == 0) {
             char *key = strtok(NULL, " ");
             if (key) {
-                struct block_t *value = rtable_get(rtable, key);
+                struct block_t *value = rtable_get(rtable_pair->tail, key);
                 if(value==NULL){
                     printf("Dados não encontrados\n");
                 }else{
@@ -112,7 +110,7 @@ int main(int argc, char **argv) {
         } else if (strcmp(command, "del") == 0) {
             char *key = strtok(NULL, " ");
             if (key) {
-                int result = rtable_del(rtable, key);
+                int result = rtable_del(rtable_pair->head, key);
                 printf("del: %s\n", result == 0 ? "entry deletada com sucesso" : "falhou ou não foi encontrado");
             } else {
                 printf("Exemplo: del <key>\n");
@@ -127,7 +125,7 @@ int main(int argc, char **argv) {
                  printf("Uso: size \n");
                  continue;
             }
-           int size = rtable_size(rtable);
+           int size = rtable_size(rtable_pair->tail);
 
             printf("size: %d\n", size);
 
@@ -139,7 +137,7 @@ int main(int argc, char **argv) {
                  printf("Uso: getkeys\n");
                  continue;
             }
-            char ** keys=rtable_get_keys(rtable);
+            char ** keys=rtable_get_keys(rtable_pair->tail);
 
             if (keys == NULL) {
                 printf("Erro ao conseguir as keys.\n");
@@ -168,7 +166,7 @@ int main(int argc, char **argv) {
                  printf("Uso: gettable\n");
                  continue;
             }
-            struct entry_t **entrys=rtable_get_table(rtable);
+            struct entry_t **entrys=rtable_get_table(rtable_pair->tail);
             if (entrys == NULL) {
                 printf("Erro ao conseguir as entrys.\n");
                 continue;
@@ -192,7 +190,7 @@ int main(int argc, char **argv) {
                  continue;
             }
 
-            struct statistics_t* stats=rtable_stats(rtable);
+            struct statistics_t* stats=rtable_stats(rtable_pair->tail);
             if (stats == NULL) {
                 printf("Erro ao conseguir estatisticas.\n");
                 continue;
@@ -211,6 +209,8 @@ int main(int argc, char **argv) {
         }
     }
     // Fechar a conexão com o servidor
-    rtable_disconnect(rtable);
+    rtable_disconnect(rtable_pair->head);
+    rtable_disconnect(rtable_pair->tail);
+    free (rtable_pair);
     return 0;
 }

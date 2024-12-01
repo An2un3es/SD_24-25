@@ -41,7 +41,7 @@ struct rtable_t *rtable_connect(char *address_port) {
 
     // Verifica se host e port_str não são NULL
     if (host == NULL || port_str == NULL) {
-        fprintf(stderr, "Erro: Formato esperado é <ip>:<port>\n");
+        printf( "Erro: Formato esperado é <ip>:<port>\n");
         free(copy);
         free(rtable);
         return NULL;
@@ -481,16 +481,16 @@ struct statistics_t *rtable_stats(struct rtable_t *rtable){
 }
 
 struct rtable_pair_t *rtable_init(const char *zookeeper_address) {
-    
+
     struct rtable_pair_t *rtable_pair = malloc(sizeof(struct rtable_pair_t));
     if (rtable_pair == NULL) {
-        fprintf(stderr, "Erro ao alocar memória para rtable_pair.\n");
+        printf( "Erro ao alocar memória para rtable_pair.\n");
         return NULL;
     }
 
     // Conectar ao ZooKeeper
     if (zookeeper_connect(zookeeper_address) != 0) {
-        fprintf(stderr, "Erro ao conectar ao ZooKeeper.\n");
+        printf( "Erro ao conectar ao ZooKeeper.\n");
         free(rtable_pair);
         return NULL;
     }
@@ -499,7 +499,7 @@ struct rtable_pair_t *rtable_init(const char *zookeeper_address) {
     char *head_address = NULL;
     char *tail_address = NULL;
     if (get_head_and_tail_addresses(&head_address, &tail_address) != 0) {
-        fprintf(stderr, "Erro ao obter endereços head e tail do ZooKeeper.\n");
+        printf( "Erro ao obter endereços head e tail do ZooKeeper.\n");
         free(rtable_pair);
         return NULL;
     }
@@ -507,17 +507,19 @@ struct rtable_pair_t *rtable_init(const char *zookeeper_address) {
     // Conectar ao servidor head
     rtable_pair->head = rtable_connect(head_address);
     if (rtable_pair->head == NULL) {
-        fprintf(stderr, "Erro ao conectar ao servidor head (%s).\n", head_address);
+        printf( "Erro ao conectar ao servidor head (%s).\n", head_address);
         free(head_address);
         free(tail_address);
         free(rtable_pair);
         return NULL;
     }
 
+    printf( "Conectado ao servidor head (%s).\n", head_address);
+
     // Conectar ao servidor tail
     rtable_pair->tail = rtable_connect(tail_address);
     if (rtable_pair->tail == NULL) {
-        fprintf(stderr, "Erro ao conectar ao servidor tail (%s).\n", tail_address);
+        printf( "Erro ao conectar ao servidor tail (%s).\n", tail_address);
         rtable_disconnect(rtable_pair->head);
         free(rtable_pair->head);
         free(head_address);
@@ -525,6 +527,7 @@ struct rtable_pair_t *rtable_init(const char *zookeeper_address) {
         free(rtable_pair);
         return NULL;
     }
+    printf( "Conectado ao servidor tail (%s).\n", head_address);
 
     // Libera endereços temporários
     free(head_address);

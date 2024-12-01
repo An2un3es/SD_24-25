@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
     signal(SIGPIPE, SIG_IGN);  // Ignorar SIGPIPE
 
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s <zookeeper_address>\n", argv[0]);
+        printf("Exemplo: %s <zookeeper_IP:zookeeper_porto>\n", argv[0]);
         return -1;
     }
 
@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     // Inicializar conexão ao ZooKeeper e servidores head/tail
     struct rtable_pair_t *rtable_pair = rtable_init(zookeeper_address);
     if (rtable_pair == NULL) {
-        fprintf(stderr, "Erro ao inicializar rtable_pair (head/tail).\n");
+        printf("Erro ao inicializar o par head/tail.\n");
         return -1;
     }
 

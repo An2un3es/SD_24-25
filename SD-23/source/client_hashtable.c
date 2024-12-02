@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
             printf("Comando desconhecido: %s\n", command);
         }
     }
-    // Fechar a conexão com o servidor
+    // Fechar as conexões com os servidores
     rtable_disconnect(rtable_pair->head);
     rtable_disconnect(rtable_pair->tail);
     free (rtable_pair);

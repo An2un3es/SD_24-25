@@ -111,21 +111,19 @@ int update_head_and_tail(struct rtable_t *head, struct rtable_t *tail) {
     return 0;
 }
 
-
-#include <zookeeper/zookeeper.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-
 // Função auxiliar para comparar identificadores
 int compare_identifiers(const void *a, const void *b) {
     return strcmp(*(const char **)a, *(const char **)b);
 }
 
+/* Função que obtém o endereço do servidor head e do servidor tail, para o cliente se
+* conectar com os mesmos.
+* Retorna 0 em caso de sucesso e -1 em caso de erro.
+*/
 int get_head_and_tail_addresses(char **head_address, char **tail_address) {
     struct String_vector children;
     
-    // Obtém a lista de filhos do zNode /chain
+    // Obter a lista de filhos do zNode /chain
     int rc = zoo_get_children(zookeeper_handle, "/chain", 0, &children);
     if (rc != ZOK) {
         fprintf(stderr, "Erro ao obter filhos do zNode /chain: %d\n", rc);
@@ -133,35 +131,35 @@ int get_head_and_tail_addresses(char **head_address, char **tail_address) {
     }
 
     if (children.count == 0) {
-        fprintf(stderr, "Nenhum servidor registrado em /chain.\n");
+        fprintf(stderr, "Nenhum servidor ligado em /chain.\n");
         return -1;
     }
 
-    // Ordena os filhos para determinar head (menor ID) e tail (maior ID)
+    // Ordenar os filhos para determinar head e tail.
     qsort(children.data, children.count, sizeof(char *), compare_identifiers);
 
-    // Aloca memória para head e tail
+    // Alocar memória para head e tail
     char head_path[256], tail_path[256];
-    snprintf(head_path, sizeof(head_path), "/chain/%s", children.data[0]); // head
-    snprintf(tail_path, sizeof(tail_path), "/chain/%s", children.data[children.count - 1]); // tail
+    snprintf(head_path, sizeof(head_path), "/chain/%s", children.data[0]);
+    snprintf(tail_path, sizeof(tail_path), "/chain/%s", children.data[children.count - 1]);
 
-    // Lê os dados associados ao head
+    // Ler os dados associados ao head
     char buffer[256];
     int buffer_len = sizeof(buffer);
     rc = zoo_get(zookeeper_handle, head_path, 0, buffer, &buffer_len, NULL);
     if (rc != ZOK) {
-        fprintf(stderr, "Erro ao obter dados do head: %s\n", head_path);
+        fprintf(stderr, "Erro ao obter dados do servidor head: %s\n", head_path);
         deallocate_String_vector(&children);
         return -1;
     }
     buffer[buffer_len] = '\0';
     *head_address = strdup(buffer);
 
-    // Lê os dados associados ao tail
+    // Ler os dados associados ao tail
     buffer_len = sizeof(buffer);
     rc = zoo_get(zookeeper_handle, tail_path, 0, buffer, &buffer_len, NULL);
     if (rc != ZOK) {
-        fprintf(stderr, "Erro ao obter dados do tail: %s\n", tail_path);
+        fprintf(stderr, "Erro ao obter dados do servidor tail: %s\n", tail_path);
         free(*head_address);
         deallocate_String_vector(&children);
         return -1;
@@ -169,10 +167,10 @@ int get_head_and_tail_addresses(char **head_address, char **tail_address) {
     buffer[buffer_len] = '\0';
     *tail_address = strdup(buffer);
 
-    // Libera a memória dos filhos
+    // Libertar a memória dos filhos
     deallocate_String_vector(&children);
 
-    return 0; // Sucesso
+    return 0;
 }
 
 

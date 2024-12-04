@@ -16,6 +16,8 @@
         "stats.h": "c",
         "zookeeper.h": "c",
         "zookeeper_usage.h": "c",
-        "socket.h": "c"
+        "socket.h": "c",
+        "server_network.h": "c",
+        "server_skeleton-private.h": "c"
     }
 }

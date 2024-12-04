@@ -6,6 +6,27 @@
 #include <unistd.h>
 #include "zookeeper_usage.h"
 
+void child_watcher(zhandle_t *wzh, int type, int state, const char *zpath, void *watcher_ctx) {
+    if (type == ZOO_CHILD_EVENT && state == ZOO_CONNECTED_STATE) {
+        zoo_string *children_list = malloc(sizeof(zoo_string));
+        if (ZOK == zoo_wget_children(wzh, "/chain", child_watcher, watcher_ctx, children_list)) {
+            char **array = malloc(2 * sizeof(char *));
+            char *node_name = extract_node_name(server->znode_path);
+            get_nodes_before_after(children_list, array, node_name);
+
+            if (array[1] != NULL && strcmp(array[1], server->next_server_name) != 0) {
+                // Atualize a conexão com o próximo servidor
+                if (server->next_server != NULL) {
+                    rtable_disconnect(server->next_server);
+                }
+                server->next_server = rtable_connect(array[1]);
+                server->next_server_name = strdup(array[1]);
+            }
+            free(array);
+        }
+        free(children_list);
+    }
+}
 
 void my_watcher_func(zhandle_t *zzh, int type, int state, const char *path, void *watcherCtx) {}
 
@@ -67,3 +88,152 @@ void get_nodes_before_after(struct String_vector *strings, char** array, char* c
     // Nó seguinte
     array[1] = (position < strings->count - 1) ? strdup(strings->data[position + 1]) : NULL;
 }
+
+struct server_t *server_init(int n_lists, char *zoo_server) {
+    if (zoo_server == NULL ) {
+        fprintf(stderr, "Erro: Argumentos inválidos para inicializar o servidor.\n");
+        return NULL;
+    }
+
+    struct server_t *server = malloc(sizeof(struct server_t));
+    if (server == NULL) {
+        fprintf(stderr, "Erro ao alocar memória para a estrutura server_t.\n");
+        return NULL;
+    }
+
+    // Inicializar tabela
+    server->table = server_skeleton_init(n_lists);
+    if (server->table == NULL) {
+        fprintf(stderr, "Erro ao inicializar tabela hash.\n");
+        free(server);
+        return NULL;
+    }
+
+    // Conectar ao ZooKeeper
+    server->zh = zookeeper_init(zoo_server, my_watcher_func, 2000, 0, NULL, 0);
+    if (server->zh == NULL) {
+        fprintf(stderr, "Erro ao conectar ao ZooKeeper.\n");
+        server_skeleton_destroy(server->table);
+        free(server);
+        return NULL;
+    }
+
+    if (ZNONODE == zoo_exists(zoo_server, "/chain", 0, NULL)) {
+                fprintf(stderr, "/chain não existe! \
+                    A criar nó /chain \n");
+
+        create_node_chain(zoo_server);
+    }
+
+    // Criar ZNode no ZooKeeper
+    char *znode_path = malloc(1024);
+    if (znode_path == NULL) {
+        fprintf(stderr, "Erro ao alocar memória para znode_path.\n");
+        server_skeleton_destroy(server->table);
+        zookeeper_close(server->zh);
+        free(server);
+        return NULL;
+    }
+
+    snprintf(znode_path, 1024, "/chain/node");
+    int new_path_len = 1024;
+    if (zoo_create(server->zh, znode_path, NULL, 0, &ZOO_OPEN_ACL_UNSAFE,
+                   ZOO_EPHEMERAL | ZOO_SEQUENCE, znode_path, new_path_len) != ZOK) {
+        fprintf(stderr, "Erro ao criar ZNode no ZooKeeper.\n");
+        server_skeleton_destroy(server->table);
+        zookeeper_close(server->zh);
+        free(znode_path);
+        free(server);
+        return NULL;
+    }
+    server->znode_path = strdup(znode_path);
+    free(znode_path);
+
+    // Configurar watch na lista de filhos do nó /chain
+    zoo_string *children_list = malloc(sizeof(zoo_string));
+    if (children_list == NULL) {
+        fprintf(stderr, "Erro ao alocar memória para children_list.\n");
+        server_skeleton_destroy(server->table);
+        zookeeper_close(server->zh);
+        free(server->znode_path);
+        free(server);
+        return NULL;
+    }
+
+    if (zoo_wget_children(server->zh, "/chain", child_watcher, NULL, children_list) != ZOK) {
+        fprintf(stderr, "Erro ao configurar watch no nó /chain.\n");
+        free(children_list);
+        server_skeleton_destroy(server->table);
+        zookeeper_close(server->zh);
+        free(server->znode_path);
+        free(server);
+        return NULL;
+    }
+
+    // Identificar antecessor e sincronizar tabela
+    char **array = malloc(2 * sizeof(char *));
+    if (array == NULL) {
+        fprintf(stderr, "Erro ao alocar memória para array de nós.\n");
+        free(children_list);
+        server_skeleton_destroy(server->table);
+        zookeeper_close(server->zh);
+        free(server->znode_path);
+        free(server);
+        return NULL;
+    }
+
+    char *node_name = extract_node_name(server->znode_path);
+    get_nodes_before_after(children_list, array, node_name);
+    free(node_name);
+
+    if (array[0] != NULL) {
+        // Sincronizar com antecessor (array[0])
+        struct rtable_t *prev_server = rtable_connect(array[0]);
+        if (prev_server != NULL) {
+            struct table_t *prev_table = rtable_gettable(prev_server);
+            if (prev_table != NULL) {
+                table_synchronize(server->table, prev_table); // Implementar função para sincronizar tabelas
+                table_destroy(prev_table);
+            }
+            rtable_disconnect(prev_server);
+        }
+    }
+
+    server->next_server_name = (array[1] != NULL) ? strdup(array[1]) : NULL;
+    server->next_server = NULL;
+
+    free(array);
+    free(children_list);
+
+    return server;
+}
+
+void server_destroy(struct server_t *server) {
+    if (server == NULL) return;
+
+    // Fechar conexão com o próximo servidor
+    if (server->next_server != NULL) {
+        rtable_disconnect(server->next_server);
+    }
+
+    // Fechar conexão com o ZooKeeper
+    if (server->zh != NULL) {
+        zookeeper_close(server->zh);
+    }
+
+    // Liberar tabela
+    if (server->table != NULL) {
+        server_skeleton_destroy(server->table);
+    }
+
+    // Liberar strings
+    if (server->znode_path != NULL) {
+        free(server->znode_path);
+    }
+    if (server->next_server_name != NULL) {
+        free(server->next_server_name);
+    }
+
+    free(server);
+}
+

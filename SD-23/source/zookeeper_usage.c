@@ -141,7 +141,7 @@ struct server_t *server_init(struct server_t *servidor,int n_lists, char *zoo_se
     snprintf(znode_path, 1024, "/chain/node");
     int new_path_len = 1024;
     char *data = server_ip_port;
-    if (zoo_create(server_g->zh, znode_path, data, 0, &ZOO_OPEN_ACL_UNSAFE,
+    if (zoo_create(server_g->zh, znode_path, data, strlen(data), &ZOO_OPEN_ACL_UNSAFE,
                    ZOO_EPHEMERAL | ZOO_SEQUENCE, znode_path, new_path_len) != ZOK) {
         fprintf(stderr, "Erro ao criar ZNode no ZooKeeper.\n");
         server_skeleton_destroy(server_g->table);

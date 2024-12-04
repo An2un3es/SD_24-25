@@ -5,22 +5,25 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "zookeeper_usage.h"
+#include "client_stub.h"
+
+struct server_t * server_g;
 
 void child_watcher(zhandle_t *wzh, int type, int state, const char *zpath, void *watcher_ctx) {
     if (type == ZOO_CHILD_EVENT && state == ZOO_CONNECTED_STATE) {
         zoo_string *children_list = malloc(sizeof(zoo_string));
         if (ZOK == zoo_wget_children(wzh, "/chain", child_watcher, watcher_ctx, children_list)) {
             char **array = malloc(2 * sizeof(char *));
-            char *node_name = extract_node_name(server->znode_path);
+            char *node_name = extract_node_name(server_g->znode_path);
             get_nodes_before_after(children_list, array, node_name);
 
-            if (array[1] != NULL && strcmp(array[1], server->next_server_name) != 0) {
+            if (array[1] != NULL && strcmp(array[1], server_g->next_server_name) != 0) {
                 // Atualize a conexão com o próximo servidor
-                if (server->next_server != NULL) {
-                    rtable_disconnect(server->next_server);
+                if (server_g->next_server != NULL) {
+                    rtable_disconnect(server_g->next_server);
                 }
-                server->next_server = rtable_connect(array[1]);
-                server->next_server_name = strdup(array[1]);
+                server_g->next_server = rtable_connect(array[1]);
+                server_g->next_server_name = strdup(array[1]);
             }
             free(array);
         }
@@ -89,32 +92,32 @@ void get_nodes_before_after(struct String_vector *strings, char** array, char* c
     array[1] = (position < strings->count - 1) ? strdup(strings->data[position + 1]) : NULL;
 }
 
-struct server_t *server_init(int n_lists, char *zoo_server) {
+struct server_t *server_init(struct server_t *servidor,int n_lists, char *zoo_server, char *server_ip_port) {
     if (zoo_server == NULL ) {
         fprintf(stderr, "Erro: Argumentos inválidos para inicializar o servidor.\n");
         return NULL;
     }
 
-    struct server_t *server = malloc(sizeof(struct server_t));
-    if (server == NULL) {
+    server_g=servidor;
+    if (server_g == NULL) {
         fprintf(stderr, "Erro ao alocar memória para a estrutura server_t.\n");
         return NULL;
     }
 
     // Inicializar tabela
-    server->table = server_skeleton_init(n_lists);
-    if (server->table == NULL) {
+    server_g->table = server_skeleton_init(n_lists);
+    if (server_g->table == NULL) {
         fprintf(stderr, "Erro ao inicializar tabela hash.\n");
-        free(server);
+        free(server_g);
         return NULL;
     }
 
     // Conectar ao ZooKeeper
-    server->zh = zookeeper_init(zoo_server, my_watcher_func, 2000, 0, NULL, 0);
-    if (server->zh == NULL) {
+    server_g->zh = zookeeper_init(zoo_server, my_watcher_func, 2000, 0, NULL, 0);
+    if (server_g->zh == NULL) {
         fprintf(stderr, "Erro ao conectar ao ZooKeeper.\n");
-        server_skeleton_destroy(server->table);
-        free(server);
+        server_skeleton_destroy(server_g->table);
+        free(server_g);
         return NULL;
     }
 
@@ -129,44 +132,45 @@ struct server_t *server_init(int n_lists, char *zoo_server) {
     char *znode_path = malloc(1024);
     if (znode_path == NULL) {
         fprintf(stderr, "Erro ao alocar memória para znode_path.\n");
-        server_skeleton_destroy(server->table);
-        zookeeper_close(server->zh);
-        free(server);
+        server_skeleton_destroy(server_g->table);
+        zookeeper_close(server_g->zh);
+        free(server_g);
         return NULL;
     }
 
     snprintf(znode_path, 1024, "/chain/node");
     int new_path_len = 1024;
-    if (zoo_create(server->zh, znode_path, NULL, 0, &ZOO_OPEN_ACL_UNSAFE,
+    char *data = server_ip_port;
+    if (zoo_create(server_g->zh, znode_path, data, 0, &ZOO_OPEN_ACL_UNSAFE,
                    ZOO_EPHEMERAL | ZOO_SEQUENCE, znode_path, new_path_len) != ZOK) {
         fprintf(stderr, "Erro ao criar ZNode no ZooKeeper.\n");
-        server_skeleton_destroy(server->table);
-        zookeeper_close(server->zh);
+        server_skeleton_destroy(server_g->table);
+        zookeeper_close(server_g->zh);
         free(znode_path);
-        free(server);
+        free(server_g);
         return NULL;
     }
-    server->znode_path = strdup(znode_path);
+    server_g->znode_path = strdup(znode_path);
     free(znode_path);
 
     // Configurar watch na lista de filhos do nó /chain
     zoo_string *children_list = malloc(sizeof(zoo_string));
     if (children_list == NULL) {
         fprintf(stderr, "Erro ao alocar memória para children_list.\n");
-        server_skeleton_destroy(server->table);
-        zookeeper_close(server->zh);
-        free(server->znode_path);
-        free(server);
+        server_skeleton_destroy(server_g->table);
+        zookeeper_close(server_g->zh);
+        free(server_g->znode_path);
+        free(server_g);
         return NULL;
     }
 
-    if (zoo_wget_children(server->zh, "/chain", child_watcher, NULL, children_list) != ZOK) {
+    if (zoo_wget_children(server_g->zh, "/chain", child_watcher, NULL, children_list) != ZOK) {
         fprintf(stderr, "Erro ao configurar watch no nó /chain.\n");
         free(children_list);
-        server_skeleton_destroy(server->table);
-        zookeeper_close(server->zh);
-        free(server->znode_path);
-        free(server);
+        server_skeleton_destroy(server_g->table);
+        zookeeper_close(server_g->zh);
+        free(server_g->znode_path);
+        free(server_g);
         return NULL;
     }
 
@@ -175,37 +179,55 @@ struct server_t *server_init(int n_lists, char *zoo_server) {
     if (array == NULL) {
         fprintf(stderr, "Erro ao alocar memória para array de nós.\n");
         free(children_list);
-        server_skeleton_destroy(server->table);
-        zookeeper_close(server->zh);
-        free(server->znode_path);
-        free(server);
+        server_skeleton_destroy(server_g->table);
+        zookeeper_close(server_g->zh);
+        free(server_g->znode_path);
+        free(server_g);
         return NULL;
     }
 
-    char *node_name = extract_node_name(server->znode_path);
+    char *node_name = extract_node_name(server_g->znode_path);
     get_nodes_before_after(children_list, array, node_name);
     free(node_name);
 
+    char buffer[512];
+    int buffer_len = sizeof(buffer);
+
     if (array[0] != NULL) {
-        // Sincronizar com antecessor (array[0])
-        struct rtable_t *prev_server = rtable_connect(array[0]);
+        if (zoo_get(server_g->zh, array[0], 0, buffer, &buffer_len, NULL) == ZOK) {
+            buffer[buffer_len] = '\0'; 
+            printf("Dados do ZNode: %s\n", buffer);
+        } else {
+            fprintf(stderr, "Erro ao obter dados do ZNode: %s\n", array[1]);
+        }
+        // Sincronizar com antecessor
+        struct rtable_t *prev_server = rtable_connect(buffer);
         if (prev_server != NULL) {
-            struct table_t *prev_table = rtable_gettable(prev_server);
-            if (prev_table != NULL) {
-                table_synchronize(server->table, prev_table); // Implementar função para sincronizar tabelas
-                table_destroy(prev_table);
+            struct entry_t **entrys = rtable_get_table(prev_server);
+            if (entrys != NULL) {
+                for (int i = 0; entrys[i] != NULL; i++) {
+                    rtable_put(server_g->table,entrys[i]);
+                }   
             }
+            rtable_free_entries(entrys);
             rtable_disconnect(prev_server);
         }
     }
-
-    server->next_server_name = (array[1] != NULL) ? strdup(array[1]) : NULL;
-    server->next_server = NULL;
+    if (array[1] != NULL) {
+        if (zoo_get(server_g->zh, array[1], 0, buffer, &buffer_len, NULL) == ZOK) {
+            buffer[buffer_len] = '\0'; 
+            server_g->next_server = rtable_connect(buffer); 
+            server_g->next_server_name = strdup(buffer); 
+        }
+    }else{
+        server_g->next_server = NULL;
+        server_g->next_server_name = NULL; 
+    }
 
     free(array);
     free(children_list);
 
-    return server;
+    return server_g;
 }
 
 void server_destroy(struct server_t *server) {

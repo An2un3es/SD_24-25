@@ -64,7 +64,8 @@ int main(int argc, char **argv) {
 
     int port = atoi(port_str);
     int n_listas = atoi(argv[3]);
-    struct server_t* server =server_init(n_listas,zoo_server_and_port);
+    struct server_t *server = malloc(sizeof(struct server_t));
+    server=server_init(server,n_listas,zoo_server_and_port,server_and_port);
 
     if(server==NULL){
         printf("Erro ao iniciar servidor");

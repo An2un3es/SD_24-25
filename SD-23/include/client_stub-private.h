@@ -15,5 +15,5 @@ struct rtable_pair_t {
     struct rtable_t *head;
     struct rtable_t *tail;
 };
-
+struct rtable_pair_t * rtable_init(const char *zookeeper_address);
 #endif

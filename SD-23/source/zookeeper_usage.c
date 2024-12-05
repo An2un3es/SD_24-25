@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include "zookeeper_usage.h"
 #include "client_stub.h"
-
+#include "server_skeleton.h"
 struct server_t * server_g;
 
 void child_watcher(zhandle_t *wzh, int type, int state, const char *zpath, void *watcher_ctx) {

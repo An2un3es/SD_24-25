@@ -37,11 +37,9 @@ all: libtable client_hashtable server_hashtable
 # Criar a biblioteca libtable.a e movê-la para o diretório lib
 libtable: $(OBJECTS)
 	ar -rcs $(LIB_DIR)/libtable.a $(OBJECTS)
-
-# Compilando o cliente
-client_hashtable: $(CLIENT_OBJECTS) lib/libtable.a
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/client_hashtable $(CLIENT_OBJECTS) lib/libtable.a -lprotobuf-c $(ZK_LIB)
-
+#Compilando o cliente
+client_hashtable: $(CLIENT_OBJECTS) $(OBJ_DIR)/server_skeleton.o lib/libtable.a
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/client_hashtable $(CLIENT_OBJECTS) $(OBJ_DIR)/server_skeleton.o lib/libtable.a -lprotobuf-c $(ZK_LIB)
 # Compilando o servidor
 server_hashtable: $(SERVER_OBJECTS) lib/libtable.a
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/server_hashtable $(SERVER_OBJECTS) lib/libtable.a -lprotobuf-c $(ZK_LIB)
@@ -77,9 +75,6 @@ $(OBJ_DIR)/server_skeleton.o: $(SRC_DIR)/server_skeleton.c
 # Regra para compilar o ficheiro message.c
 $(OBJ_DIR)/message.o: $(SRC_DIR)/message.c
 	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJ_DIR)/zookeeper_usage.o: $(SRC_DIR)/zookeeper_usage.c
-	$(CC) $(CFLAGS) -c $< -o $@ $(ZK_LIB)
 
 # Regras para compilar os arquivos objeto comuns
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c

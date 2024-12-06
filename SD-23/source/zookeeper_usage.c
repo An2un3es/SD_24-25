@@ -59,7 +59,7 @@ char *extract_node_name(char *path) {
 }
 
 
-void get_nodes_before_after(struct String_vector *strings, char** array, char* compare){
+char** get_nodes_before_after(struct String_vector *strings, char** array, char* compare){
 
     if (strings == NULL || strings->count == 0 || compare == NULL) {
         array[0] = NULL;
@@ -83,13 +83,14 @@ void get_nodes_before_after(struct String_vector *strings, char** array, char* c
     if (position == -1) { // Nó `compare` não encontrado
         array[0] = NULL;
         array[1] = NULL;
-        return array;
+        return NULL;
     }
 
     // Nó anterior
     array[0] = (position > 0) ? strdup(strings->data[position - 1]) : NULL;
     // Nó seguinte
     array[1] = (position < strings->count - 1) ? strdup(strings->data[position + 1]) : NULL;
+    return array;
 }
 
 struct server_t *server_init(struct server_t *servidor,int n_lists, char *zoo_server, char *server_ip_port) {
@@ -121,11 +122,11 @@ struct server_t *server_init(struct server_t *servidor,int n_lists, char *zoo_se
         return NULL;
     }
 
-    if (ZNONODE == zoo_exists(zoo_server, "/chain", 0, NULL)) {
+    if (ZNONODE == zoo_exists(servidor->zh, "/chain", 0, NULL)) { //confirmar
                 fprintf(stderr, "/chain não existe! \
                     A criar nó /chain \n");
 
-        create_node_chain(zoo_server);
+        create_node_chain(servidor->zh);
     }
 
     // Criar ZNode no ZooKeeper
@@ -206,7 +207,7 @@ struct server_t *server_init(struct server_t *servidor,int n_lists, char *zoo_se
             struct entry_t **entrys = rtable_get_table(prev_server);
             if (entrys != NULL) {
                 for (int i = 0; entrys[i] != NULL; i++) {
-                    rtable_put(server_g->table,entrys[i]);
+                    table_put(server_g->table,entrys[i]->key,entrys[i]->value);  //TODO @Rodrigo cofirmar
                 }   
             }
             rtable_free_entries(entrys);

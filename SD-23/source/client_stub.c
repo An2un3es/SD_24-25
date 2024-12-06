@@ -6,12 +6,188 @@ Carolina Romeira - 59867
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "block.h"
 #include "entry.h"
 #include "client_stub-private.h"
 #include "client_network.h"
 #include "htmessages.pb-c.h"
 #include "stats.h"
+#include <zookeeper/zookeeper.h>
+
+// Estrutura para armazenar o contexto do watcher
+typedef struct {
+    struct rtable_t *head;
+    struct rtable_t *tail;
+} watcher_context_t;
+
+// Variável global para a conexão ao ZooKeeper
+zhandle_t *zookeeper_handle = NULL;
+
+// Atualiza as conexões com os servidores head e tail
+int update_head_and_tail(struct rtable_t *head, struct rtable_t *tail) {
+    struct String_vector children;
+    memset(&children, 0, sizeof(children));
+
+    // Obter filhos de /chain de forma síncrona
+    int rc = zoo_get_children(zookeeper_handle, "/chain", 1, &children);
+    if (rc != ZOK) {
+        fprintf(stderr, "Erro ao obter filhos de /chain: %d\n", rc);
+        return -1;
+    }
+
+    char *head_server = NULL;
+    char *tail_server = NULL;
+
+    // Identificar head e tail com base nos IDs dos servidores
+    for (int i = 0; i < children.count; i++) {
+        if (head_server == NULL || strcmp(children.data[i], head_server) < 0) {
+            head_server = children.data[i];
+        }
+        if (tail_server == NULL || strcmp(children.data[i], tail_server) > 0) {
+            tail_server = children.data[i];
+        }
+    }
+
+    if (!head_server || !tail_server) {
+        fprintf(stderr, "Erro: Não foi possível identificar head e tail.\n");
+        deallocate_String_vector(&children);
+        return -1;
+    }
+
+    printf("Novo head: %s, Novo tail: %s\n", head_server, tail_server);
+
+    // Atualizar conexões
+    network_close(head);
+    free(head->server_address);
+    head->server_address = strdup(head_server);
+    if (network_connect(head) < 0) {
+        fprintf(stderr, "Erro ao conectar ao novo head.\n");
+        deallocate_String_vector(&children);
+        return -1;
+    }
+
+    network_close(tail);
+    free(tail->server_address);
+    tail->server_address = strdup(tail_server);
+    if (network_connect(tail) < 0) {
+        fprintf(stderr, "Erro ao conectar ao novo tail.\n");
+        deallocate_String_vector(&children);
+        return -1;
+    }
+
+    deallocate_String_vector(&children);
+    return 0;
+}
+
+// Conexão ao ZooKeeper
+int zookeeper_connect(const char *zookeeper_address, watcher_context_t *context) {
+    zookeeper_handle = zookeeper_init(zookeeper_address, NULL, 30000, 0, 0, 0);
+    if (zookeeper_handle == NULL) {
+        fprintf(stderr, "Erro ao conectar ao ZooKeeper.\n");
+        return -1;
+    }
+
+    // Registrar watcher inicial e atualizar head e tail
+    if (update_head_and_tail(context->head, context->tail) < 0) {
+        fprintf(stderr, "Erro ao registrar watcher inicial e atualizar head e tail.\n");
+        zookeeper_close(zookeeper_handle);
+        return -1;
+    }
+
+    return 0;
+}
+
+// Função auxiliar para comparar identificadores
+int compare_identifiers(const void *a, const void *b) {
+    return strcmp(*(const char **)a, *(const char **)b);
+}
+
+// Obter endereços do head e tail
+int get_head_and_tail_addresses(char **head_address, char **tail_address) {
+    struct String_vector children;
+    int rc;
+
+    // Obter a lista de filhos do zNode /chain
+    rc = zoo_get_children(zookeeper_handle, "/chain", 0, &children);
+    if (rc != ZOK) {
+        fprintf(stderr, "Erro ao obter filhos do zNode /chain: %d\n", rc);
+        return -1;
+    }
+
+    if (children.count == 0) {
+        fprintf(stderr, "Nenhum servidor ligado em /chain.\n");
+        return -1;
+    }
+
+    // Ordenar os filhos para determinar head e tail.
+    qsort(children.data, children.count, sizeof(char *), compare_identifiers);
+
+    // Alocar memória para head e tail
+    char head_path[256], tail_path[256];
+    snprintf(head_path, sizeof(head_path), "/chain/%s", children.data[0]); // Menor ID -> head
+    snprintf(tail_path, sizeof(tail_path), "/chain/%s", children.data[children.count - 1]); // Maior ID -> tail
+
+    // Ler os dados associados ao head
+    char buffer[256];
+    int buffer_len = sizeof(buffer);
+    rc = zoo_get(zookeeper_handle, head_path, 0, buffer, &buffer_len, NULL);
+    if (rc != ZOK) {
+        fprintf(stderr, "Erro ao obter dados do servidor head: %s\n", head_path);
+        deallocate_String_vector(&children);
+        return -1;
+    }
+    buffer[buffer_len] = '\0';
+    *head_address = strdup(buffer);
+
+    // Ler os dados associados ao tail
+    buffer_len = sizeof(buffer);
+    rc = zoo_get(zookeeper_handle, tail_path, 0, buffer, &buffer_len, NULL);
+    if (rc != ZOK) {
+        fprintf(stderr, "Erro ao obter dados do servidor tail: %s\n", tail_path);
+        free(*head_address);
+        deallocate_String_vector(&children);
+        return -1;
+    }
+    buffer[buffer_len] = '\0';
+    *tail_address = strdup(buffer);
+
+    // Libertar a memória dos filhos
+    deallocate_String_vector(&children);
+
+    return 0; // Sucesso
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* Função para estabelecer uma associação entre o cliente e o servidor,
@@ -478,60 +654,79 @@ struct statistics_t *rtable_stats(struct rtable_t *rtable){
 }
 
 /*
-* Função que deveolve um par de rtables (head e tail) aa quais cada cliente se liga.
-* Aqui é feita a conexão do cliente com o Zookeepe, tal como a criação das duas rtables.
+* Função que deveolve um par de rtables (head e tail) a quais cada cliente se liga.
+* Aqui é feita a conexão do cliente com o Zookeeper, tal como a criação das duas rtables.
 * Retorna o par de rtables ou NULL em caso de erro.
 */
 struct rtable_pair_t *rtable_init(const char *zookeeper_address) {
-
     struct rtable_pair_t *rtable_pair = malloc(sizeof(struct rtable_pair_t));
     if (rtable_pair == NULL) {
-        printf( "Erro ao alocar memória para rtable_pair.\n");
+        printf("Erro ao alocar memória para rtable_pair.\n");
         return NULL;
     }
 
-    //Conectar ao ZooKeeper
-    if (zookeeper_connect(zookeeper_address) != 0) {
-        printf( "Erro ao conectar ao ZooKeeper.\n");
+    // Inicializar o contexto do watcher
+    watcher_context_t *context = malloc(sizeof(watcher_context_t));
+    if (context == NULL) {
+        printf("Erro ao alocar memória para watcher_context_t.\n");
         free(rtable_pair);
         return NULL;
     }
+    context->head = NULL;
+    context->tail = NULL;
 
-    //Obter endereços do head e tail a partir do ZooKeeper
+    // Conectar ao ZooKeeper
+    if (zookeeper_connect(zookeeper_address, context) != 0) {
+        printf("Erro ao conectar ao ZooKeeper.\n");
+        free(rtable_pair);
+        free(context);
+        return NULL;
+    }
+
+    // Obter endereços do head e tail a partir do ZooKeeper
     char *head_address = NULL;
     char *tail_address = NULL;
     if (get_head_and_tail_addresses(&head_address, &tail_address) != 0) {
-        printf( "Erro ao obter endereços head e tail do ZooKeeper.\n");
+        printf("Erro ao obter endereços head e tail do ZooKeeper.\n");
         free(rtable_pair);
+        free(context);
+        free(head_address);
+        free(tail_address);
         return NULL;
     }
 
-    //Conectar ao servidor head
+    // Conectar ao servidor head
     rtable_pair->head = rtable_connect(head_address);
     if (rtable_pair->head == NULL) {
-        printf( "Erro ao conectar ao servidor head (%s).\n", head_address);
+        printf("Erro ao conectar ao servidor head (%s).\n", head_address);
         free(head_address);
         free(tail_address);
         free(rtable_pair);
+        free(context);
         return NULL;
     }
 
-    printf( "Conectado ao servidor head (%s).\n", head_address);
+    // Atualizar o contexto com a conexão do head
+    context->head = rtable_pair->head;
+    printf("Conectado ao servidor head (%s).\n", head_address);
 
-    //Conectar ao servidor tail
+    // Conectar ao servidor tail
     rtable_pair->tail = rtable_connect(tail_address);
     if (rtable_pair->tail == NULL) {
-        printf( "Erro ao conectar ao servidor tail (%s).\n", tail_address);
+        printf("Erro ao conectar ao servidor tail (%s).\n", tail_address);
         rtable_disconnect(rtable_pair->head);
-        free(rtable_pair->head);
         free(head_address);
         free(tail_address);
         free(rtable_pair);
+        free(context);
         return NULL;
     }
-    printf( "Conectado ao servidor tail (%s).\n", head_address);
 
-    //Libertar endereços temporários
+    // Atualizar o contexto com a conexão do tail
+    context->tail = rtable_pair->tail;
+    printf("Conectado ao servidor tail (%s).\n", tail_address);
+
+    // Libertar endereços temporários
     free(head_address);
     free(tail_address);
 

@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
                     continue; 
                 }
 
-                int result = rtable_put(rtable_pair->head, entry);
+                int result = rtable_put(rtable_pair->tail, entry);
                
                 printf("put: %s\n", result == 0 ? "sucesso" : "falhou");
                 free(value_copy);

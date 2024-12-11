@@ -25,6 +25,7 @@ typedef struct {
 zhandle_t *zookeeper_handle = NULL;
 
 int get_head_and_tail_addresses(char **head_address, char **tail_address);
+
 // Atualiza as conexões com os servidores head e tail
 int update_head_and_tail(struct rtable_t *head, struct rtable_t *tail) {
     struct String_vector children;
@@ -59,42 +60,34 @@ int update_head_and_tail(struct rtable_t *head, struct rtable_t *tail) {
     printf("Novo head: %s, Novo tail: %s\n", head_server, tail_server);
     
     // Atualizar conexões
-    network_close(head);
-    free(head->server_address);
+    rtable_disconnect(head);
     if(get_head_and_tail_addresses(&head_server, &tail_server )<0){
   
         return -1;
     }
-   
-    char *head_server_host = strtok(head_server, ":");
-    char *head_server_port = strtok(NULL, ":");
-    head->server_address = strdup(head_server_host);
-    head->server_port = atoi(strdup(head_server_port));
-
-    if (network_connect(head) < 0) {
+  
+    head = rtable_connect(head_server);
+    if (head ==NULL) {
         fprintf(stderr, "Erro ao conectar ao novo head.\n");
         deallocate_String_vector(&children);
         return -1;
     }
-    network_close(tail);
-    free(tail->server_address);
-    char *tail_server_host = strtok(tail_server, ":");
-    char *tail_server_port = strtok(NULL, ":");
-    tail->server_address = strdup(tail_server_host);
-    tail->server_port = atoi(strdup(tail_server_port));
-
-    printf("feshow  2\n");
-    fflush(stdout);
-    if (network_connect(tail) < 0) {
-        fprintf(stderr, "Erro ao conectar ao novo tail.\n");
-        deallocate_String_vector(&children);
-        return -1;
+    rtable_disconnect(tail);
+    if(strcmp(head_server,tail_server) == 0){
+        tail ->server_address = strdup(head ->server_address);
+        tail ->server_port= head->server_port;
+        tail ->sockfd= head->sockfd;
+    }else{
+        tail = rtable_connect(tail_server);
+        if (tail == NULL) {
+            fprintf(stderr, "Erro ao conectar ao novo head.\n");
+            deallocate_String_vector(&children);
+            return -1;
+        }
     }
-
-    deallocate_String_vector(&children);
-    return 0;
+        deallocate_String_vector(&children);
+        return 0;
 }
-
 // Conexão ao ZooKeeper
 int zookeeper_connect(const char *zookeeper_address, watcher_context_t *context) {
     zookeeper_handle = zookeeper_init(zookeeper_address, NULL, 30000, 0, 0, 0);
@@ -710,38 +703,15 @@ struct rtable_pair_t *rtable_init(const char *zookeeper_address) {
         return NULL;
     }
 
-    // Conectar ao servidor head
-    rtable_pair->head = rtable_connect(head_address);
-    if (rtable_pair->head == NULL) {
-        printf("Erro ao conectar ao servidor head (%s).\n", head_address);
-        free(head_address);
-        free(tail_address);
-        free(rtable_pair);
-        free(context);
-        return NULL;
-    }
 
-    // Atualizar o contexto com a conexão do head
-    context->head = rtable_pair->head;
+    // Atualizar com o contexto com a conexão do head
+    rtable_pair->head= context->head;
     printf("Conectado ao servidor head (%s).\n", head_address);
 
-    // Conectar ao servidor tail
-    rtable_pair->tail = rtable_connect(tail_address);
-    if (rtable_pair->tail == NULL) {
-        printf("Erro ao conectar ao servidor tail (%s).\n", tail_address);
-        rtable_disconnect(rtable_pair->head);
-        free(head_address);
-        free(tail_address);
-        free(rtable_pair);
-        free(context);
-        return NULL;
-    }
-
     // Atualizar o contexto com a conexão do tail
-    context->tail = rtable_pair->tail;
+    rtable_pair->tail = context->tail;
     printf("Conectado ao servidor tail (%s).\n", tail_address);
 
-    // Libertar endereços temporários
     free(head_address);
     free(tail_address);
 

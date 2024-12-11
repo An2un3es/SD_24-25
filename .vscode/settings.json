@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "htmessages.pb-c.h": "c",
-        "list": "c"
+        "list": "c",
+        "client_stub-private.h": "c"
     }
 }

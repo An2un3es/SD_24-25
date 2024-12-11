@@ -24,6 +24,7 @@ typedef struct {
 // Variável global para a conexão ao ZooKeeper
 zhandle_t *zookeeper_handle = NULL;
 
+int get_head_and_tail_addresses(char **head_address, char **tail_address);
 // Atualiza as conexões com os servidores head e tail
 int update_head_and_tail(struct rtable_t *head, struct rtable_t *tail) {
     struct String_vector children;
@@ -56,20 +57,34 @@ int update_head_and_tail(struct rtable_t *head, struct rtable_t *tail) {
     }
 
     printf("Novo head: %s, Novo tail: %s\n", head_server, tail_server);
-
+    
     // Atualizar conexões
     network_close(head);
     free(head->server_address);
-    head->server_address = strdup(head_server);
+    if(get_head_and_tail_addresses(&head_server, &tail_server )<0){
+  
+        return -1;
+    }
+   
+    char *head_server_host = strtok(head_server, ":");
+    char *head_server_port = strtok(NULL, ":");
+    head->server_address = strdup(head_server_host);
+    head->server_port = atoi(strdup(head_server_port));
+
     if (network_connect(head) < 0) {
         fprintf(stderr, "Erro ao conectar ao novo head.\n");
         deallocate_String_vector(&children);
         return -1;
     }
-
     network_close(tail);
     free(tail->server_address);
-    tail->server_address = strdup(tail_server);
+    char *tail_server_host = strtok(tail_server, ":");
+    char *tail_server_port = strtok(NULL, ":");
+    tail->server_address = strdup(tail_server_host);
+    tail->server_port = atoi(strdup(tail_server_port));
+
+    printf("feshow  2\n");
+    fflush(stdout);
     if (network_connect(tail) < 0) {
         fprintf(stderr, "Erro ao conectar ao novo tail.\n");
         deallocate_String_vector(&children);
@@ -672,8 +687,8 @@ struct rtable_pair_t *rtable_init(const char *zookeeper_address) {
         free(rtable_pair);
         return NULL;
     }
-    context->head = NULL;
-    context->tail = NULL;
+    context->head =malloc(sizeof(struct rtable_t));
+    context->tail = malloc(sizeof(struct rtable_t));
 
     // Conectar ao ZooKeeper
     if (zookeeper_connect(zookeeper_address, context) != 0) {

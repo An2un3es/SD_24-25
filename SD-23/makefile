@@ -41,8 +41,9 @@ libtable: $(OBJECTS)
 client_hashtable: $(CLIENT_OBJECTS) $(OBJ_DIR)/server_skeleton.o lib/libtable.a
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/client_hashtable $(CLIENT_OBJECTS) $(OBJ_DIR)/server_skeleton.o lib/libtable.a -lprotobuf-c $(ZK_LIB)
 # Compilando o servidor
-server_hashtable: $(SERVER_OBJECTS) lib/libtable.a
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/server_hashtable $(SERVER_OBJECTS) lib/libtable.a -lprotobuf-c $(ZK_LIB)
+server_hashtable: $(SERVER_OBJECTS) $(OBJ_DIR)/client_stub.o $(OBJ_DIR)/client_network.o lib/libtable.a
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/server_hashtable $(SERVER_OBJECTS) $(OBJ_DIR)/client_stub.o $(OBJ_DIR)/client_network.o lib/libtable.a -lprotobuf-c $(ZK_LIB)
+
 
 # Regras para compilar o arquivo gerado a partir do htmessages.proto
 $(OBJ_DIR)/htmessages.pb-c.o: $(SRC_DIR)/htmessages.pb-c.c
@@ -53,7 +54,7 @@ $(OBJ_DIR)/client_hashtable.o: $(SRC_DIR)/client_hashtable.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/client_stub.o: $(SRC_DIR)/client_stub.c
-	$(CC) $(CFLAGS) -c $< -o $@ $(ZK_LIB)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/client_network.o: $(SRC_DIR)/client_network.c
 	$(CC) $(CFLAGS) -c $< -o $@

@@ -114,6 +114,8 @@ struct server_t *server_init(struct server_t *servidor,int n_lists, char *zoo_se
     }
 
     // Conectar ao ZooKeeper
+    printf("ENDEREÇO DO ZOOKEEPER FORNECIDO: %s\n", zoo_server);
+
     server_g->zh = zookeeper_init(zoo_server, my_watcher_func, 2000, 0, NULL, 0);
     if (server_g->zh == NULL) {
         fprintf(stderr, "Erro ao conectar ao ZooKeeper.\n");
@@ -199,7 +201,7 @@ struct server_t *server_init(struct server_t *servidor,int n_lists, char *zoo_se
             buffer[buffer_len] = '\0'; 
             printf("Dados do ZNode: %s\n", buffer);
         } else {
-            fprintf(stderr, "Erro ao obter dados do ZNode: %s\n", array[1]);
+            printf("Erro ao obter dados do ZNode: %s\n", array[1]);
         }
         // Sincronizar com antecessor
         struct rtable_t *prev_server = rtable_connect(buffer);
@@ -228,6 +230,8 @@ struct server_t *server_init(struct server_t *servidor,int n_lists, char *zoo_se
     free(array);
     free(children_list);
 
+
+    printf("Server inicializado com sucesso.\n");
     return server_g;
 }
 

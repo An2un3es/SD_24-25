@@ -18,6 +18,7 @@
         "zookeeper_usage.h": "c",
         "socket.h": "c",
         "server_network.h": "c",
-        "server_skeleton-private.h": "c"
+        "server_skeleton-private.h": "c",
+        "client_stub.h": "c"
     }
 }

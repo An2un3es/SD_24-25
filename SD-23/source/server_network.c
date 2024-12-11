@@ -100,7 +100,7 @@ int server_network_init(short port)
     // Fazer o bind do socket ao endereço e à porta
     if (bind(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0)
     {
-        printf("Erro ao fazer o bind");
+        printf("Erro ao fazer o bind\n");
         close(sockfd); // Fechar o socket em caso de erro
         return -1;
     }

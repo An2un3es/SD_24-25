@@ -26,7 +26,7 @@ void create_node_chain(zhandle_t *zzh);
 
 char *extract_node_name(char *path);
 
-char** get_nodes_before_after(struct String_vector *strings, char** array, char* compare);
+char** get_nodes_before_after(struct String_vector *strings, char* compare);
 
 struct server_t *server_init(struct server_t *servidor, int n_lists, char *zoo_server,char *server_ip_port);
 

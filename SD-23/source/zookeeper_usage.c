@@ -12,39 +12,44 @@ void child_watcher(zhandle_t *wzh, int type, int state, const char *zpath, void 
     struct server_t *server = (struct server_t *)watcher_ctx;  // Passar o servidor como contexto
 
     if (type == ZOO_CHILD_EVENT && state == ZOO_CONNECTED_STATE) {
-        zoo_string *children_list = malloc(sizeof(zoo_string));
-        if (children_list == NULL) {
-            fprintf(stderr, "Erro de alocação de memória para children_list.\n");
-            return;  // Evitar acesso a memória inválida
+        struct String_vector children_list;  // Usar String_vector para armazenar os filhos
+        int ret = zoo_get_children(wzh, "/chain", 1, &children_list);
+        
+        if (ret != ZOK) {
+            printf("Erro ao obter filhos de /chain: %d\n", ret);
+            return;  // Evitar acessar dados inválidos
         }
 
-        if (ZOK == zoo_wget_children(wzh, "/chain", child_watcher, watcher_ctx, children_list)) {
-            char **array = malloc(2 * sizeof(char *));
-            if (array == NULL) {
-                fprintf(stderr, "Erro de alocação de memória para array de nós.\n");
-                free(children_list);
-                return;
-            }
-            char *node_name = extract_node_name(server->znode_path);
-            get_nodes_before_after(children_list, array, node_name);
 
-            if (array[1] != NULL && strcmp(array[1], server->next_server_name) != 0) {
-                // Atualize a conexão com o próximo servidor
-                if (server->next_server != NULL) {
-                    rtable_disconnect(server->next_server);
-                }
-                server->next_server = rtable_connect(array[1]);
-                server->next_server_name = strdup(array[1]);
-            }
+        // Extrair o nome do nó atual
+        char *node_name = extract_node_name(server->znode_path);
+        char **array=get_nodes_before_after(&children_list,node_name);
 
-            // Liberar memória para strings duplicadas
-            free(array[0]);
-            free(array[1]);
-            free(array);
+        if (array[0] == NULL){
+            printf("ERRO AO OBTER NÓ 1\n");
         }
-        free(children_list);
+        printf("NO 1: %s\n",array[0]);
+
+        if (array[1] == NULL){
+            printf("ERRO AO OBTER NÓ 2\n");
+        }
+        printf("NO 2: %s\n",array[1]);
+
+
+        // Verificar se o próximo nó mudou e atualizar a conexão com o próximo servidor
+        if (server->next_server_name == NULL || array[1] != NULL || strcmp(array[1], server->next_server_name) != 0) {
+            if (server->next_server != NULL) {
+                rtable_disconnect(server->next_server);
+            }
+            server->next_server = rtable_connect(array[1]);
+            server->next_server_name = strdup(array[1]);
+        }
+
+        // Liberar memória para strings duplicadas (se necessário)
+        free(array[1]);
     }
 }
+
 
 void my_watcher_func(zhandle_t *zzh, int type, int state, const char *path, void *watcherCtx) {}
 
@@ -71,15 +76,16 @@ char *extract_node_name(char *path) {
     return strdup(last_slash + 1); 
 }
 
-char** get_nodes_before_after(struct String_vector *strings, char** array, char* compare){
+char** get_nodes_before_after(struct String_vector *strings, char* compare) {
 
+    char **array = malloc(2 * sizeof(char *));
     if (strings == NULL || strings->count == 0 || compare == NULL) {
         array[0] = NULL;
         array[1] = NULL;
         return array;
     }
 
-    // Ordenar a lista de nós para garantir a sequência correta
+    // Ordenar a lista de nós com o casting adequado
     qsort(strings->data, strings->count, sizeof(char *), (int (*)(const void *, const void *))strcmp);
 
     int position = -1;
@@ -102,8 +108,10 @@ char** get_nodes_before_after(struct String_vector *strings, char** array, char*
     array[0] = (position > 0) ? strdup(strings->data[position - 1]) : NULL;
     // Nó seguinte
     array[1] = (position < strings->count - 1) ? strdup(strings->data[position + 1]) : NULL;
+    
     return array;
 }
+
 
 struct server_t *server_init(struct server_t *servidor, int n_lists, char *zoo_server, char *server_ip_port) {
     if (zoo_server == NULL ) {
@@ -196,8 +204,9 @@ struct server_t *server_init(struct server_t *servidor, int n_lists, char *zoo_s
     printf("PASSA3\n");
     fflush(stdout);
 
-    // Identificar antecessor e sincronizar tabela
-    char **array = malloc(2 * sizeof(char *));
+
+    char *node_name = extract_node_name(server->znode_path);
+    char **array= get_nodes_before_after(children_list,node_name);
     if (array == NULL) {
         fprintf(stderr, "Erro ao alocar memória para array de nós.\n");
         free(children_list);
@@ -207,9 +216,6 @@ struct server_t *server_init(struct server_t *servidor, int n_lists, char *zoo_s
         free(server);
         return NULL;
     }
-
-    char *node_name = extract_node_name(server->znode_path);
-    get_nodes_before_after(children_list, array, node_name);
     free(node_name);
 
     char buffer[512];
@@ -218,7 +224,9 @@ struct server_t *server_init(struct server_t *servidor, int n_lists, char *zoo_s
     printf("NODE ANTES: %s\n", array[0]);
 
     if (array[0] != NULL) {
-        if (zoo_get(server->zh, array[0], 0, buffer, &buffer_len, NULL) == ZOK) {
+        char full_path[512];
+        snprintf(full_path, sizeof(full_path), "/chain/%s", array[0]);
+        if (zoo_get(server->zh, full_path, 0, buffer, &buffer_len, NULL) == ZOK) {
             buffer[buffer_len] = '\0'; 
             printf("Dados do ZNode: %s\n", buffer);
         } else {
@@ -243,7 +251,9 @@ struct server_t *server_init(struct server_t *servidor, int n_lists, char *zoo_s
     }
 
     if (array[1] != NULL) {
-        if (zoo_get(server->zh, array[1], 0, buffer, &buffer_len, NULL) == ZOK) {
+        char full_path2[512];
+        snprintf(full_path2, sizeof(full_path2), "/chain/%s", array[1]);
+        if (zoo_get(server->zh, full_path2, 0, buffer, &buffer_len, NULL) == ZOK) {
             buffer[buffer_len] = '\0'; 
             server->next_server = rtable_connect(buffer); 
             server->next_server_name = strdup(buffer); 

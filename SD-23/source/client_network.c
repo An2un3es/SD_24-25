@@ -33,7 +33,7 @@ int network_connect(struct rtable_t *rtable){
       perror("Error creating TCP socket");
       return -1;
     }
-
+    close(rtable-> sockfd);
     rtable->sockfd=sockfd;
 
     // Preenche a estrutura server
@@ -49,6 +49,7 @@ int network_connect(struct rtable_t *rtable){
     }
 
     // Estabelece a conexão
+    printf("CHEGA AQUIIIIII.\n");
     if (connect(rtable-> sockfd, (struct sockaddr *)&server, sizeof(server)) < 0) {
         perror("Erro ao conectar-se ao servidor");
         close(rtable-> sockfd);

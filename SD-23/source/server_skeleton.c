@@ -14,6 +14,7 @@ Carolina Romeira - 59867
 #include "htmessages.pb-c.h"
 #include "block.h"
 #include "stats-private.h"
+#include "zookeeper_usage.h"
 
 statistics_t server_stats;
 
@@ -111,6 +112,11 @@ int invoke(MessageT *msg, struct table_t *table)
             return -1;
         }
 
+
+        if(rtable_put_next(msg->entry->key,new_block)<0){
+            printf("ERROOOOOOOOOOOO\n");
+        }
+
         // Limpa a memória temporária
         block_destroy(new_block);
         printf("Comando put executado com sucesso\n");
@@ -172,7 +178,9 @@ int invoke(MessageT *msg, struct table_t *table)
             msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
             return -1;
         }
-
+        if(rtable_del_next(msg->key)<0){
+            printf("ERROOOOOOOOOOOO\n");
+        }
         printf("Comando del executado com sucesso\n");
 
         break;

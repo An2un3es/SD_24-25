@@ -8,6 +8,8 @@
 #include "client_stub.h"
 #include "client_stub-private.h"
 #include "server_skeleton.h"
+#include "block.h"
+#include "entry.h"
 
 struct server_t *server_global;
 
@@ -61,6 +63,7 @@ void child_watcher(zhandle_t *wzh, int type, int state, const char *zpath, void 
             if (server_global->next_server != NULL) {
                 rtable_disconnect(server_global->next_server);
             }
+            sleep(3);
             server_global->next_server = rtable_connect(array[1]);
             server_global->next_server_name = strdup(array[1]);
         }
@@ -197,6 +200,8 @@ struct server_t *server_init(int n_lists, char *zoo_server, char *server_ip_port
     printf("PASSA1\n");
     fflush(stdout);
 
+    //sleep(1);
+
     // Configurar watch na lista de filhos do nó /chain
     zoo_string *children_list = malloc(sizeof(zoo_string));
     if (children_list == NULL) {
@@ -295,6 +300,62 @@ struct server_t *server_init(int n_lists, char *zoo_server, char *server_ip_port
     printf("Server inicializado com sucesso.\n");
     return server_global;
 }
+
+
+int rtable_put_next(char *key, struct block_t *value){
+
+    if(server_global->next_server!=NULL){
+        if (value == NULL || key == NULL)
+            return -1;
+
+        // Cria uma cópia da chave
+        char *key_copy = strdup(key);
+        if (key_copy == NULL) {
+            return -1; 
+        }
+
+        // Cria uma cópia do bloco usando block_duplicate
+        struct block_t *value_copy = block_duplicate(value);
+        if (value_copy == NULL) {
+            free(key_copy); 
+            return -1; 
+        }
+
+        // Cria a nova entry
+        struct entry_t *entry = entry_create(key_copy, value_copy);
+        rtable_put(server_global->next_server,entry);
+        printf("CHEGOU NO NEXT.\n");
+    }else{
+        printf("CHEGOU NA TAIL.\n");
+    }
+    return 0;
+
+}
+
+int rtable_del_next(char *key){
+
+    if(server_global->next_server!=NULL){
+        
+        if (key == NULL)
+            return -1;
+
+        // Cria uma cópia da chave
+        char *key_copy = strdup(key);
+        if (key_copy == NULL) {
+            return -1; 
+        }
+
+        rtable_del(server_global->next_server,key_copy);
+        printf("CHEGOU NO NEXT.\n");
+    }else{
+        printf("CHEGOU NA TAIL.\n");
+    }
+    return 0;
+
+}
+
+
+
 
 void server_destroy(struct server_t *server) {
     if (server == NULL) return;

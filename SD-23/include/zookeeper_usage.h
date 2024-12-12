@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <zookeeper/zookeeper.h>
+#include "block.h"
 
 typedef struct String_vector zoo_string; 
 
@@ -29,6 +30,10 @@ char *extract_node_name(char *path);
 char** get_nodes_before_after(struct String_vector *strings, char* compare);
 
 struct server_t *server_init(int n_lists, char *zoo_server, char *server_ip_port);
+
+int rtable_put_next(char *key, struct block_t *value);
+
+int rtable_del_next(char *key);
 
 void server_destroy(struct server_t *server);
 

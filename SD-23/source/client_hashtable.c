@@ -52,10 +52,12 @@ int main(int argc, char **argv) {
     printf("Comandos: \n put <key> <value> -> inserir o dado na tabela com a chave dada\n get <key> -> retornar o conteudo da chave pedida, se existir \n del <key> -> remover a entry com a chave dada da tabela\n size -> retornar o número de entrys na tabela \n getkeys -> retornar todas as chaves existentes \n gettable -> retornar todas as entrys na tabela\n stats -> obter estatisticas do servidor\n quit -> encerrar ligação com o servidor\n");
     char input[256];
     while (1) {
-        printf("Insira um Comando: ");
-        if (fgets(input, sizeof(input), stdin) == NULL) {
+        printf("Insira um Comando: "); 
+        if (scanf("%255[^\n]%*c", input) != 1) {
+            printf("Erro ao ler a entrada.\n");
             break;
         }
+
 
         // Remover o '\n' da entrada
         input[strcspn(input, "\n")] = 0;

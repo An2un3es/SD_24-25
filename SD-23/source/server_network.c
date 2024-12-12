@@ -119,7 +119,8 @@ int server_network_init(short port)
         close(sockfd); // Fechar o socket em caso de erro
         return -1;
     }
-
+    printf("PASSA2\n");
+    fflush(stdout);
     return sockfd;
 }
 

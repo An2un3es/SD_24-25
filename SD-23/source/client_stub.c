@@ -88,6 +88,7 @@ int update_head_and_tail(struct rtable_t **head, struct rtable_t **tail) {
         (*tail)->server_address=strdup((*head)->server_address);
         (*tail)->server_port=(*head)->server_port;
         (*tail)->sockfd=(*head)->sockfd;
+        printf("HEAD E TAIL IGUAIS\n");
     }else{
         *tail = rtable_connect(tail_server);
         if (tail == NULL) {

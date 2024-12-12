@@ -34,6 +34,20 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    if (rtable_pair->head != NULL) {
+        printf("HEAD:\n");
+        printf("%s\n",rtable_pair->head->server_address);
+        printf("%d\n",rtable_pair->head->server_port);
+        printf("%d\n",rtable_pair->head->sockfd);
+    }
+
+    if (rtable_pair->tail != NULL) {
+        printf("TAIL:\n");
+        printf("%s\n",rtable_pair->tail->server_address);
+        printf("%d\n",rtable_pair->tail->server_port);
+        printf("%d\n",rtable_pair->tail->sockfd);
+    }
+
 
     printf("Comandos: \n put <key> <value> -> inserir o dado na tabela com a chave dada\n get <key> -> retornar o conteudo da chave pedida, se existir \n del <key> -> remover a entry com a chave dada da tabela\n size -> retornar o número de entrys na tabela \n getkeys -> retornar todas as chaves existentes \n gettable -> retornar todas as entrys na tabela\n stats -> obter estatisticas do servidor\n quit -> encerrar ligação com o servidor\n");
     char input[256];
@@ -80,7 +94,7 @@ int main(int argc, char **argv) {
                     continue; 
                 }
 
-                int result = rtable_put(rtable_pair->tail, entry);
+                int result = rtable_put(rtable_pair->head, entry);
                
                 printf("put: %s\n", result == 0 ? "sucesso" : "falhou");
                 free(value_copy);
@@ -209,8 +223,13 @@ int main(int argc, char **argv) {
         }
     }
     // Fechar as conexões com os servidores
-    rtable_disconnect(rtable_pair->head);
-    rtable_disconnect(rtable_pair->tail);
+    
+    if(strcmp(rtable_pair->head->server_address, rtable_pair->tail->server_address) == 0){
+        rtable_disconnect(rtable_pair->head);
+    }else{
+        rtable_disconnect(rtable_pair->head);
+        rtable_disconnect(rtable_pair->tail);
+    }
     free (rtable_pair);
     return 0;
 }

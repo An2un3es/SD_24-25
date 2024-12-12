@@ -27,7 +27,7 @@ zhandle_t *zookeeper_handle = NULL;
 int get_head_and_tail_addresses(char **head_address, char **tail_address);
 
 // Atualiza as conexões com os servidores head e tail
-int update_head_and_tail(struct rtable_t *head, struct rtable_t *tail) {
+int update_head_and_tail(struct rtable_t **head, struct rtable_t **tail) {
     struct String_vector children;
     memset(&children, 0, sizeof(children));
 
@@ -59,26 +59,37 @@ int update_head_and_tail(struct rtable_t *head, struct rtable_t *tail) {
 
     printf("Novo head: %s, Novo tail: %s\n", head_server, tail_server);
     
+
+
+    if(head!=NULL){
+        rtable_disconnect(*head);
+    }
+    printf("AQUIIIIIIII 1\n");
+    if(tail!=NULL){
+        rtable_disconnect(*tail);
+    }
+    printf("AQUIIIIIIII 2\n");
+
     // Atualizar conexões
-    rtable_disconnect(head);
     if(get_head_and_tail_addresses(&head_server, &tail_server )<0){
   
         return -1;
     }
-  
-    head = rtable_connect(head_server);
+    printf("AQUIIIIIIII 3\n");
+    *head = rtable_connect(head_server);
     if (head ==NULL) {
-        fprintf(stderr, "Erro ao conectar ao novo head.\n");
+        printf("Erro ao conectar ao novo head.\n");
         deallocate_String_vector(&children);
         return -1;
     }
-    rtable_disconnect(tail);
+    printf("AQUIIIIIIII 4\n");
     if(strcmp(head_server,tail_server) == 0){
-        tail ->server_address = strdup(head ->server_address);
-        tail ->server_port= head->server_port;
-        tail ->sockfd= head->sockfd;
+        *tail = (struct rtable_t *)malloc(sizeof(struct rtable_t));
+        (*tail)->server_address=strdup((*head)->server_address);
+        (*tail)->server_port=(*head)->server_port;
+        (*tail)->sockfd=(*head)->sockfd;
     }else{
-        tail = rtable_connect(tail_server);
+        *tail = rtable_connect(tail_server);
         if (tail == NULL) {
             fprintf(stderr, "Erro ao conectar ao novo head.\n");
             deallocate_String_vector(&children);
@@ -97,7 +108,7 @@ int zookeeper_connect(const char *zookeeper_address, watcher_context_t *context)
     }
 
     // Registrar watcher inicial e atualizar head e tail
-    if (update_head_and_tail(context->head, context->tail) < 0) {
+    if (update_head_and_tail(&context->head, &context->tail) < 0) {
         fprintf(stderr, "Erro ao registrar watcher inicial e atualizar head e tail.\n");
         zookeeper_close(zookeeper_handle);
         return -1;
@@ -231,6 +242,8 @@ struct rtable_t *rtable_connect(char *address_port) {
         return NULL;
     }
 
+    printf("ANTES DE UM STRDUP.\n");
+
     // Copia o endereço do servidor
     rtable->server_address = strdup(host);
     rtable->server_port = atoi(port_str);
@@ -294,7 +307,7 @@ int rtable_put(struct rtable_t *rtable, struct entry_t *entry){
     // Enviar a mensagem e receber a resposta
     MessageT *response = network_send_receive(rtable, &msg);
     if (response == NULL) {
-        printf("Erro ao enviar/receber mensagem");
+        printf("Erro ao enviar/receber mensagem\n");
         return -1;  
     }
 
@@ -667,11 +680,14 @@ struct statistics_t *rtable_stats(struct rtable_t *rtable){
 * Retorna o par de rtables ou NULL em caso de erro.
 */
 struct rtable_pair_t *rtable_init(const char *zookeeper_address) {
+
     struct rtable_pair_t *rtable_pair = malloc(sizeof(struct rtable_pair_t));
     if (rtable_pair == NULL) {
         printf("Erro ao alocar memória para rtable_pair.\n");
         return NULL;
     }
+
+    printf("PASSA POR 1.\n");
 
     // Inicializar o contexto do watcher
     watcher_context_t *context = malloc(sizeof(watcher_context_t));
@@ -680,8 +696,6 @@ struct rtable_pair_t *rtable_init(const char *zookeeper_address) {
         free(rtable_pair);
         return NULL;
     }
-    context->head =malloc(sizeof(struct rtable_t));
-    context->tail = malloc(sizeof(struct rtable_t));
 
     // Conectar ao ZooKeeper
     if (zookeeper_connect(zookeeper_address, context) != 0) {
@@ -690,6 +704,16 @@ struct rtable_pair_t *rtable_init(const char *zookeeper_address) {
         free(context);
         return NULL;
     }
+
+    if (context->head == NULL) {
+        printf("CONTEXT NÃO ESTÁ CERTO.\n");
+    }
+
+    if (context->tail == NULL) {
+        printf("CONTEXT NÃO ESTÁ CERTO.\n");
+    }
+
+    printf("PASSA POR 2.\n");
 
     // Obter endereços do head e tail a partir do ZooKeeper
     char *head_address = NULL;
@@ -703,17 +727,32 @@ struct rtable_pair_t *rtable_init(const char *zookeeper_address) {
         return NULL;
     }
 
+    printf("PASSA POR 3.\n");
 
+    rtable_pair->head = malloc(sizeof(struct rtable_t));
+    memcpy(rtable_pair->head, context->head, sizeof(struct rtable_t));
     // Atualizar com o contexto com a conexão do head
-    rtable_pair->head= context->head;
+    rtable_pair->head->server_address=strdup(head_address);
+    printf("PASSA POR 4.\n");
+    printf("ISTOOOOOOO: %d.\n",context->head->server_port);
+    rtable_pair->head->server_port=context->head->server_port;
+    printf("PASSA POR 5.\n");
+    rtable_pair->head->sockfd=context->head->sockfd;
+    printf("PASSA POR 6.\n");
+    
     printf("Conectado ao servidor head (%s).\n", head_address);
 
     // Atualizar o contexto com a conexão do tail
-    rtable_pair->tail = context->tail;
+    rtable_pair->tail = malloc(sizeof(struct rtable_t));
+    memcpy(rtable_pair->tail, context->tail, sizeof(struct rtable_t));
+    rtable_pair->tail->server_address= strdup(tail_address);
+    rtable_pair->tail->server_port=context->tail->server_port;
+    rtable_pair->tail->sockfd=context->tail->sockfd;
     printf("Conectado ao servidor tail (%s).\n", tail_address);
 
     free(head_address);
     free(tail_address);
+    
 
     return rtable_pair;
 }

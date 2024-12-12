@@ -96,7 +96,7 @@ MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg){
     // Enviar o tamanho da mensagem ao servidor
     uint32_t msg_size_network = htonl(msg_size);  // Converter para ordem de rede
     if (write_all(socketfd, &msg_size_network, sizeof(msg_size_network)) < 0) {
-        fprintf(stderr, "Erro ao enviar o tamanho da mensagem ao servidor.\n");
+        printf("Erro ao enviar o tamanho da mensagem ao servidor.\n");
         free(msg_serialized);
         return NULL;
     }

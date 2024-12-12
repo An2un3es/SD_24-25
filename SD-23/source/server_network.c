@@ -75,19 +75,26 @@ void *client_handler(void *client_socket)
     pthread_exit(NULL); // Termina a thread
 }
 
-/* Função para preparar um socket de receção de pedidos de ligação
- * num determinado porto.
- * Retorna o descritor do socket ou -1 em caso de erro.
- */
 int server_network_init(short port)
 {
     int sockfd;
     struct sockaddr_in server;
 
+    printf("PASSA1\n");
+    fflush(stdout);
+
     // Criar socket TCP
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         printf("Erro ao criar o socket");
+        return -1;
+    }
+
+    // Configurar a opção SO_REUSEADDR para reutilizar a porta
+    int optval = 1;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
+        printf("Erro ao configurar SO_REUSEADDR\n");
+        close(sockfd);
         return -1;
     }
 
@@ -115,6 +122,7 @@ int server_network_init(short port)
 
     return sockfd;
 }
+
 
 /* A função network_receive() deve:
  * - Ler os bytes da rede, a partir do client_socket indicado;

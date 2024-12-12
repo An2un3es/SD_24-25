@@ -28,7 +28,7 @@ char *extract_node_name(char *path);
 
 char** get_nodes_before_after(struct String_vector *strings, char* compare);
 
-struct server_t *server_init(struct server_t *servidor, int n_lists, char *zoo_server,char *server_ip_port);
+struct server_t *server_init(int n_lists, char *zoo_server, char *server_ip_port);
 
 void server_destroy(struct server_t *server);
 

@@ -50,7 +50,7 @@ int network_connect(struct rtable_t *rtable){
     }
 
     // Estabelece a conexão
-    printf("CHEGA AQUIIIIII.\n");
+    printf("SERVIDOR. %d\n", rtable->server_port);
     if (connect(rtable-> sockfd, (struct sockaddr *)&server, sizeof(server)) < 0) {
         perror("Erro ao conectar-se ao servidor");
         close(rtable-> sockfd);

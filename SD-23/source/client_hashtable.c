@@ -53,8 +53,7 @@ int main(int argc, char **argv) {
     char input[256];
     while (1) {
         printf("Insira um Comando: "); 
-        if (scanf("%255[^\n]%*c", input) != 1) {
-            printf("Erro ao ler a entrada.\n");
+        if (fgets(input, sizeof(input), stdin) == NULL) {
             break;
         }
 

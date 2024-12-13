@@ -24,6 +24,29 @@ typedef struct {
 // Variável global para a conexão ao ZooKeeper
 zhandle_t *zookeeper_handle = NULL;
 
+int update_head_and_tail(struct rtable_t **head, struct rtable_t **tail);
+
+void chain_watcher(zhandle_t *zh, int type, int state, const char *path, void *watcher_ctx) {
+    if (type == ZOO_CHILD_EVENT && strcmp(path, "/chain") == 0) {
+        printf("Alteração detectada em /chain\n");
+
+        // Atualize os servidores head e tail
+        watcher_context_t *context = (watcher_context_t *)watcher_ctx;
+        if (update_head_and_tail(&context->head, &context->tail) < 0) {
+            fprintf(stderr, "Erro ao atualizar head e tail após alteração no /chain.\n");
+        } else {
+            printf("Servidores head e tail atualizados com sucesso.\n");
+        }
+
+        // Reativar o watcher para futuras alterações
+        int rc = zoo_wget_children(zh, "/chain", chain_watcher, watcher_ctx, NULL);
+        if (rc != ZOK) {
+            fprintf(stderr, "Erro ao reativar watcher em /chain: %d\n", rc);
+        }
+    }
+}
+
+
 int get_head_and_tail_addresses(char **head_address, char **tail_address);
 
 // Atualiza as conexões com os servidores head e tail
@@ -90,6 +113,7 @@ int update_head_and_tail(struct rtable_t **head, struct rtable_t **tail) {
         (*tail)->sockfd=(*head)->sockfd;
         printf("HEAD E TAIL IGUAIS\n");
     }else{
+        sleep(5);
         *tail = rtable_connect(tail_server);
         if (tail == NULL) {
             fprintf(stderr, "Erro ao conectar ao novo head.\n");
@@ -102,21 +126,22 @@ int update_head_and_tail(struct rtable_t **head, struct rtable_t **tail) {
 }
 // Conexão ao ZooKeeper
 int zookeeper_connect(const char *zookeeper_address, watcher_context_t *context) {
-    zookeeper_handle = zookeeper_init(zookeeper_address, NULL, 30000, 0, 0, 0);
+    zookeeper_handle = zookeeper_init(zookeeper_address, chain_watcher, 30000, 0, context, 0);
     if (zookeeper_handle == NULL) {
-        fprintf(stderr, "Erro ao conectar ao ZooKeeper.\n");
+        printf("Erro ao conectar ao ZooKeeper.\n");
         return -1;
     }
 
     // Registrar watcher inicial e atualizar head e tail
     if (update_head_and_tail(&context->head, &context->tail) < 0) {
-        fprintf(stderr, "Erro ao registrar watcher inicial e atualizar head e tail.\n");
+        printf("Erro ao registrar watcher inicial e atualizar head e tail.\n");
         zookeeper_close(zookeeper_handle);
         return -1;
     }
 
     return 0;
 }
+
 
 // Função auxiliar para comparar identificadores
 int compare_identifiers(const void *a, const void *b) {

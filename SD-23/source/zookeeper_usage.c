@@ -25,7 +25,7 @@ void child_watcher(zhandle_t *wzh, int type, int state, const char *zpath, void 
             return;  // Evitar acessar dados inválidos
         }
 
-
+        sleep(1);
         // Extrair o nome do nó atual
         char *node_name = extract_node_name(watcher->znode_path);
         char **array=get_nodes_before_after(&children_list,node_name);
@@ -185,6 +185,7 @@ struct server_t *server_init(int n_lists, char *zoo_server, char *server_ip_port
     snprintf(znode_path, 1024, "/chain/node");
     int new_path_len = 1024;
     char *data = server_ip_port;
+    
     if (zoo_create(server_global->zh, znode_path, data, strlen(data), &ZOO_OPEN_ACL_UNSAFE,
                    ZOO_EPHEMERAL | ZOO_SEQUENCE, znode_path, new_path_len) != ZOK) {
         fprintf(stderr, "Erro ao criar ZNode no ZooKeeper.\n");
@@ -197,10 +198,11 @@ struct server_t *server_init(int n_lists, char *zoo_server, char *server_ip_port
     server_global->znode_path = strdup(znode_path);
     free(znode_path);
 
+    sleep(1);
+
     printf("PASSA1\n");
     fflush(stdout);
 
-    //sleep(1);
 
     // Configurar watch na lista de filhos do nó /chain
     zoo_string *children_list = malloc(sizeof(zoo_string));
@@ -335,7 +337,7 @@ int rtable_put_next(char *key, struct block_t *value){
 int rtable_del_next(char *key){
 
     if(server_global->next_server!=NULL){
-        
+
         if (key == NULL)
             return -1;
 

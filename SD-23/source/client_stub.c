@@ -21,6 +21,8 @@ typedef struct {
     struct rtable_t *tail;
 } watcher_context_t;
 
+struct rtable_pair_t *rtable_pair_global;
+
 // Variável global para a conexão ao ZooKeeper
 zhandle_t *zookeeper_handle = NULL;
 
@@ -34,7 +36,10 @@ void chain_watcher(zhandle_t *zh, int type, int state, const char *path, void *w
         watcher_context_t *context = (watcher_context_t *)watcher_ctx;
         if (update_head_and_tail(&context->head, &context->tail) < 0) {
             fprintf(stderr, "Erro ao atualizar head e tail após alteração no /chain.\n");
+
         } else {
+            rtable_pair_global->head=context->head;
+            rtable_pair_global->tail=context->tail;
             printf("Servidores head e tail atualizados com sucesso.\n");
         }
 
@@ -707,8 +712,8 @@ struct statistics_t *rtable_stats(struct rtable_t *rtable){
 */
 struct rtable_pair_t *rtable_init(const char *zookeeper_address) {
 
-    struct rtable_pair_t *rtable_pair = malloc(sizeof(struct rtable_pair_t));
-    if (rtable_pair == NULL) {
+    rtable_pair_global = malloc(sizeof(struct rtable_pair_t));
+    if (rtable_pair_global == NULL) {
         printf("Erro ao alocar memória para rtable_pair.\n");
         return NULL;
     }
@@ -719,14 +724,14 @@ struct rtable_pair_t *rtable_init(const char *zookeeper_address) {
     watcher_context_t *context = malloc(sizeof(watcher_context_t));
     if (context == NULL) {
         printf("Erro ao alocar memória para watcher_context_t.\n");
-        free(rtable_pair);
+        free(rtable_pair_global);
         return NULL;
     }
 
     // Conectar ao ZooKeeper
     if (zookeeper_connect(zookeeper_address, context) != 0) {
         printf("Erro ao conectar ao ZooKeeper.\n");
-        free(rtable_pair);
+        free(rtable_pair_global);
         free(context);
         return NULL;
     }
@@ -746,7 +751,7 @@ struct rtable_pair_t *rtable_init(const char *zookeeper_address) {
     char *tail_address = NULL;
     if (get_head_and_tail_addresses(&head_address, &tail_address) != 0) {
         printf("Erro ao obter endereços head e tail do ZooKeeper.\n");
-        free(rtable_pair);
+        free(rtable_pair_global);
         free(context);
         free(head_address);
         free(tail_address);
@@ -755,30 +760,30 @@ struct rtable_pair_t *rtable_init(const char *zookeeper_address) {
 
     printf("PASSA POR 3.\n");
 
-    rtable_pair->head = malloc(sizeof(struct rtable_t));
-    memcpy(rtable_pair->head, context->head, sizeof(struct rtable_t));
+    rtable_pair_global->head = malloc(sizeof(struct rtable_t));
+    memcpy(rtable_pair_global->head, context->head, sizeof(struct rtable_t));
     // Atualizar com o contexto com a conexão do head
-    rtable_pair->head->server_address=strdup(head_address);
+    rtable_pair_global->head->server_address=strdup(head_address);
     printf("PASSA POR 4.\n");
     printf("ISTOOOOOOO: %d.\n",context->head->server_port);
-    rtable_pair->head->server_port=context->head->server_port;
+    rtable_pair_global->head->server_port=context->head->server_port;
     printf("PASSA POR 5.\n");
-    rtable_pair->head->sockfd=context->head->sockfd;
+    rtable_pair_global->head->sockfd=context->head->sockfd;
     printf("PASSA POR 6.\n");
     
     printf("Conectado ao servidor head (%s).\n", head_address);
 
     // Atualizar o contexto com a conexão do tail
-    rtable_pair->tail = malloc(sizeof(struct rtable_t));
-    memcpy(rtable_pair->tail, context->tail, sizeof(struct rtable_t));
-    rtable_pair->tail->server_address= strdup(tail_address);
-    rtable_pair->tail->server_port=context->tail->server_port;
-    rtable_pair->tail->sockfd=context->tail->sockfd;
+    rtable_pair_global->tail = malloc(sizeof(struct rtable_t));
+    memcpy(rtable_pair_global->tail, context->tail, sizeof(struct rtable_t));
+    rtable_pair_global->tail->server_address= strdup(tail_address);
+    rtable_pair_global->tail->server_port=context->tail->server_port;
+    rtable_pair_global->tail->sockfd=context->tail->sockfd;
     printf("Conectado ao servidor tail (%s).\n", tail_address);
 
     free(head_address);
     free(tail_address);
     
 
-    return rtable_pair;
+    return rtable_pair_global;
 }

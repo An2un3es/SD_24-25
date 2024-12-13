@@ -47,8 +47,7 @@ struct table_t *server_skeleton_init(int n_lists)
 /* Liberta toda a memória ocupada pela tabela e todos os recursos
  * e outros recursos usados pelo skeleton.
  * Retorna 0 (OK) ou -1 em caso de erro. */
-int server_skeleton_destroy(struct table_t *table)
-{
+int server_skeleton_destroy(struct table_t *table){
     if (table == NULL)
         return -1;
 
@@ -179,7 +178,7 @@ int invoke(MessageT *msg, struct table_t *table)
             return -1;
         }
         if(rtable_del_next(msg->key)<0){
-            printf("ERROOOOOOOOOOOO\n");
+            printf("ERRO\n");
         }
         printf("Comando del executado com sucesso\n");
 
@@ -332,7 +331,7 @@ int invoke(MessageT *msg, struct table_t *table)
         pthread_mutex_lock(&server_stats.stats_mutex);
         msg->stats->total_ops = server_stats.total_operations;
         msg->stats->total_time = server_stats.total_time;
-        msg->stats->active_clients = server_stats.connected_clients;
+        msg->stats->active_clients = server_stats.connected_clients; //-1 por causa do server?????
         pthread_mutex_unlock(&server_stats.stats_mutex);
 
         msg->opcode = MESSAGE_T__OPCODE__OP_STATS + 1;

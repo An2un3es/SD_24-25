@@ -35,7 +35,7 @@ void chain_watcher(zhandle_t *zh, int type, int state, const char *path, void *w
         // Atualize os servidores head e tail
         watcher_context_t *context = (watcher_context_t *)watcher_ctx;
         if (update_head_and_tail(&context->head, &context->tail) < 0) {
-            fprintf(stderr, "Erro ao atualizar head e tail após alteração no /chain.\n");
+            printf("Erro ao atualizar head e tail após alteração no /chain.\n");
 
         } else {
             rtable_pair_global->head=context->head;
@@ -46,7 +46,7 @@ void chain_watcher(zhandle_t *zh, int type, int state, const char *path, void *w
         // Reativar o watcher para futuras alterações
         int rc = zoo_wget_children(zh, "/chain", chain_watcher, watcher_ctx, NULL);
         if (rc != ZOK) {
-            fprintf(stderr, "Erro ao reativar watcher em /chain: %d\n", rc);
+            printf("Erro ao reativar watcher em /chain: %d\n", rc);
         }
     }
 }
@@ -62,7 +62,7 @@ int update_head_and_tail(struct rtable_t **head, struct rtable_t **tail) {
     // Obter filhos de /chain de forma síncrona
     int rc = zoo_get_children(zookeeper_handle, "/chain", 1, &children);
     if (rc != ZOK) {
-        fprintf(stderr, "Erro ao obter filhos de /chain: %d\n", rc);
+        printf("Erro ao obter filhos de /chain: %d\n", rc);
         return -1;
     }
 
@@ -80,7 +80,7 @@ int update_head_and_tail(struct rtable_t **head, struct rtable_t **tail) {
     }
 
     if (!head_server || !tail_server) {
-        fprintf(stderr, "Erro: Não foi possível identificar head e tail.\n");
+        printf("Erro: Não foi possível identificar head e tail.\n");
         deallocate_String_vector(&children);
         return -1;
     }
@@ -121,7 +121,7 @@ int update_head_and_tail(struct rtable_t **head, struct rtable_t **tail) {
         sleep(5);
         *tail = rtable_connect(tail_server);
         if (tail == NULL) {
-            fprintf(stderr, "Erro ao conectar ao novo head.\n");
+            printf("Erro ao conectar ao novo head.\n");
             deallocate_String_vector(&children);
             return -1;
         }
@@ -161,12 +161,12 @@ int get_head_and_tail_addresses(char **head_address, char **tail_address) {
     // Obter a lista de filhos do zNode /chain
     rc = zoo_get_children(zookeeper_handle, "/chain", 0, &children);
     if (rc != ZOK) {
-        fprintf(stderr, "Erro ao obter filhos do zNode /chain: %d\n", rc);
+        printf("Erro ao obter filhos do zNode /chain: %d\n", rc);
         return -1;
     }
 
     if (children.count == 0) {
-        fprintf(stderr, "Nenhum servidor ligado em /chain.\n");
+        printf("Nenhum servidor ligado em /chain.\n");
         return -1;
     }
 
@@ -183,7 +183,7 @@ int get_head_and_tail_addresses(char **head_address, char **tail_address) {
     int buffer_len = sizeof(buffer);
     rc = zoo_get(zookeeper_handle, head_path, 0, buffer, &buffer_len, NULL);
     if (rc != ZOK) {
-        fprintf(stderr, "Erro ao obter dados do servidor head: %s\n", head_path);
+        printf("Erro ao obter dados do servidor head: %s\n", head_path);
         deallocate_String_vector(&children);
         return -1;
     }
@@ -194,7 +194,7 @@ int get_head_and_tail_addresses(char **head_address, char **tail_address) {
     buffer_len = sizeof(buffer);
     rc = zoo_get(zookeeper_handle, tail_path, 0, buffer, &buffer_len, NULL);
     if (rc != ZOK) {
-        fprintf(stderr, "Erro ao obter dados do servidor tail: %s\n", tail_path);
+        printf("Erro ao obter dados do servidor tail: %s\n", tail_path);
         free(*head_address);
         deallocate_String_vector(&children);
         return -1;

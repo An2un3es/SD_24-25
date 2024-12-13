@@ -73,14 +73,14 @@ int network_connect(struct rtable_t *rtable){
 MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg){
 
     if (rtable == NULL || msg == NULL) {
-        fprintf(stderr, "Erro: %s é NULL.\n", rtable == NULL ? "rtable" : "msg");
+        printf("Erro: %s é NULL.\n", rtable == NULL ? "rtable" : "msg");
         return NULL;
     }
 
     // Obter o descritor da ligação (socket) da estrutura rtable_t
     int socketfd = rtable->sockfd;
     if (socketfd <= 0) {
-        fprintf(stderr, "Erro: descritor de socket inválido.\n");
+        printf("Erro: descritor de socket inválido.\n");
         return NULL;
     }
 
@@ -89,7 +89,7 @@ MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg){
     size_t msg_size = message_t__get_packed_size(msg);
     uint8_t *msg_serialized = (uint8_t *)malloc(msg_size);
     if (msg_serialized == NULL) {
-        fprintf(stderr, "Erro: falha ao alocar memória para a mensagem serializada.\n");
+        printf("Erro: falha ao alocar memória para a mensagem serializada.\n");
         return NULL;
     }
     message_t__pack(msg, msg_serialized);
@@ -106,7 +106,7 @@ MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg){
 
     // Enviar a mensagem serializada para o servidor
     if (write_all(socketfd, msg_serialized, msg_size) < 0) {
-        fprintf(stderr, "Erro ao enviar a mensagem ao servidor.\n");
+        printf("Erro ao enviar a mensagem ao servidor.\n");
         free(msg_serialized);
         return NULL;
     }
@@ -116,7 +116,7 @@ MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg){
     // Esperar a resposta do servidor (tamanho da mensagem)
     uint32_t response_size_network;
     if (read_all(socketfd, &response_size_network, sizeof(response_size_network)) < 0) {
-        fprintf(stderr, "Erro ao receber o tamanho da resposta do servidor.\n");
+        printf("Erro ao receber o tamanho da resposta do servidor.\n");
         return NULL;
     }
     size_t response_size = ntohl(response_size_network);  // Converter size
@@ -125,11 +125,11 @@ MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg){
     // Alocar memória para a resposta e receber a mensagem completa
     uint8_t *response_buf = (uint8_t *)malloc(response_size);
     if (response_buf == NULL) {
-        fprintf(stderr, "Erro: falha ao alocar memória para a resposta.\n");
+        printf("Erro: falha ao alocar memória para a resposta.\n");
         return NULL;
     }
     if (read_all(socketfd, response_buf, response_size) < 0) {
-        fprintf(stderr, "Erro ao receber a resposta do servidor.\n");
+        printf("Erro ao receber a resposta do servidor.\n");
         free(response_buf);
         return NULL;
     }
@@ -139,7 +139,7 @@ MessageT *network_send_receive(struct rtable_t *rtable, MessageT *msg){
     free(response_buf);  // Libertar a memória do buffer da resposta
 
     if (response_msg == NULL) {
-        fprintf(stderr, "Erro ao deserializar a resposta do servidor.\n");
+        printf("Erro ao deserializar a resposta do servidor.\n");
         return NULL;
     }
 

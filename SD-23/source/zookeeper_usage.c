@@ -1,3 +1,8 @@
+/* Grupo 23
+Gabriel Gameiro - 56299
+Rodrigo Antunes - 56321
+Carolina Romeira - 59867
+*/
 #include <time.h>
 #include <stdio.h>
 #include <errno.h>
@@ -138,20 +143,20 @@ char** get_nodes_before_after(struct String_vector *strings, char* compare) {
 
 struct server_t *server_init(int n_lists, char *zoo_server, char *server_ip_port) {
     if (zoo_server == NULL ) {
-        fprintf(stderr, "Erro: Argumentos inválidos para inicializar o servidor.\n");
+        printf("Erro: Argumentos inválidos para inicializar o servidor.\n");
         return NULL;
     }
     
     server_global = malloc(sizeof(struct server_t));
     if (server_global == NULL) {
-        fprintf(stderr, "Erro ao alocar memória para a estrutura server_t.\n");
+        printf("Erro ao alocar memória para a estrutura server_t.\n");
         return NULL;
     }
 
     // Inicializar tabela
     server_global->table = server_skeleton_init(n_lists);
     if (server_global->table == NULL) {
-        fprintf(stderr, "Erro ao inicializar tabela hash.\n");
+        printf("Erro ao inicializar tabela hash.\n");
         free(server_global);
         return NULL;
     }
@@ -161,21 +166,21 @@ struct server_t *server_init(int n_lists, char *zoo_server, char *server_ip_port
 
     server_global->zh = zookeeper_init(zoo_server, my_watcher_func, 2000, 0, NULL, 0);
     if (server_global->zh == NULL) {
-        fprintf(stderr, "Erro ao conectar ao ZooKeeper.\n");
+        printf("Erro ao conectar ao ZooKeeper.\n");
         server_skeleton_destroy(server_global->table);
         free(server_global);
         return NULL;
     }
 
     if (ZNONODE == zoo_exists(server_global->zh, "/chain", 0, NULL)) { 
-        fprintf(stderr, "/chain não existe! A criar nó /chain \n");
+        printf("/chain não existe! A criar nó /chain \n");
         create_node_chain(server_global->zh);
     }
 
     // Criar ZNode no ZooKeeper
     char *znode_path = malloc(1024);
     if (znode_path == NULL) {
-        fprintf(stderr, "Erro ao alocar memória para znode_path.\n");
+        printf("Erro ao alocar memória para znode_path.\n");
         server_skeleton_destroy(server_global->table);
         zookeeper_close(server_global->zh);
         free(server_global);
@@ -188,7 +193,7 @@ struct server_t *server_init(int n_lists, char *zoo_server, char *server_ip_port
     
     if (zoo_create(server_global->zh, znode_path, data, strlen(data), &ZOO_OPEN_ACL_UNSAFE,
                    ZOO_EPHEMERAL | ZOO_SEQUENCE, znode_path, new_path_len) != ZOK) {
-        fprintf(stderr, "Erro ao criar ZNode no ZooKeeper.\n");
+        printf("Erro ao criar ZNode no ZooKeeper.\n");
         server_skeleton_destroy(server_global->table);
         zookeeper_close(server_global->zh);
         free(znode_path);
@@ -207,7 +212,7 @@ struct server_t *server_init(int n_lists, char *zoo_server, char *server_ip_port
     // Configurar watch na lista de filhos do nó /chain
     zoo_string *children_list = malloc(sizeof(zoo_string));
     if (children_list == NULL) {
-        fprintf(stderr, "Erro ao alocar memória para children_list.\n");
+        printf("Erro ao alocar memória para children_list.\n");
         server_skeleton_destroy(server_global->table);
         zookeeper_close(server_global->zh);
         free(server_global->znode_path);
@@ -219,7 +224,7 @@ struct server_t *server_init(int n_lists, char *zoo_server, char *server_ip_port
     fflush(stdout);
 
     if (zoo_wget_children(server_global->zh, "/chain", child_watcher, (void *)server_global, children_list) != ZOK) {  // Passar `server` como contexto
-        fprintf(stderr, "Erro ao configurar watch no nó /chain.\n");
+        printf("Erro ao configurar watch no nó /chain.\n");
         free(children_list);
         server_skeleton_destroy(server_global->table);
         zookeeper_close(server_global->zh);
@@ -235,7 +240,7 @@ struct server_t *server_init(int n_lists, char *zoo_server, char *server_ip_port
     char *node_name = extract_node_name(server_global->znode_path);
     char **array= get_nodes_before_after(children_list,node_name);
     if (array == NULL) {
-        fprintf(stderr, "Erro ao alocar memória para array de nós.\n");
+        printf("Erro ao alocar memória para array de nós.\n");
         free(children_list);
         server_skeleton_destroy(server_global->table);
         zookeeper_close(server_global->zh);

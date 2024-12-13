@@ -138,7 +138,7 @@ MessageT *network_receive(int client_socket)
     uint32_t msg_size_network;
     if (read_all(client_socket, &msg_size_network, sizeof(msg_size_network)) < 0)
     {
-        fprintf(stderr, "Erro ao ler o tamanho da mensagem.\n");
+        printf("Erro ao ler o tamanho da mensagem.\n");
         return NULL;
     }
 
@@ -148,14 +148,14 @@ MessageT *network_receive(int client_socket)
     uint8_t *msg_buffer = malloc(msg_size);
     if (msg_buffer == NULL)
     {
-        fprintf(stderr, "Erro ao alocar memória para a mensagem.\n");
+        printf("Erro ao alocar memória para a mensagem.\n");
         return NULL;
     }
 
     // Ler a mensagem completa usando o tamanho previamente lido
     if (read_all(client_socket, msg_buffer, msg_size) < 0)
     {
-        fprintf(stderr, "Erro ao ler a mensagem completa.\n");
+        printf("Erro ao ler a mensagem completa.\n");
         free(msg_buffer);
         return NULL;
     }

@@ -17,5 +17,9 @@ FASE 4:
 
 De maneira aleatória um servidor não se consegue ligar devido a um problema ao trocar ao ordenar os z_nodes. 
 
-Ao ler o guião ficou dubio se o numero de ligações ao executar o comando "stats" deve incluir o nºtotal de clientes ligados + o servidor anterior ou não. Optamos por deixar o número de ligações total.
+Ao ler o guião ficou dúbio se o numero de ligações ao executar o comando "stats" deve incluir o nºtotal de clientes ligados + o servidor anterior ou não. Optamos por deixar o número de ligações total.
+
+Pensámos em criar um ficheiro semlhante a zookeeper_usage.c para o cliente, no entanto devido ao dias a menos que tivemos de entrega, acabamos por optar ser mais diretos.
+
+Se o servidor head for desconectado os clientes entram em loop.
 
